@@ -1,10 +1,13 @@
 /* USER CODE BEGIN Header */
-/**
+/*
   ******************************************************************************
   * @file    tim.c
   * @brief   This file provides code for the configuration
   *          of the TIM instances.
+  * */
+
 /* Includes ------------------------------------------------------------------*/
+
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */

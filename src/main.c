@@ -62,6 +62,10 @@ void SystemClock_Config(void);
  * @brief  The application entry point.
  * @retval int
  */
+
+int a = 10;
+int b = 10;
+int c = 0;
 int main(void)
 {
 
@@ -91,15 +95,18 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
-
+  int a = 10;
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
-    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
-    HAL_Delay(50);                         // Пауза 500 миллисекунд.
+    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
+    a++;
+    c = a + 10;
+    c = a + b + c;
+    HAL_Delay(500); // Пауза 500 миллисекунд.
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
