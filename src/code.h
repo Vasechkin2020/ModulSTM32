@@ -8,19 +8,10 @@ class CCode
 private:
     /* data */
 public:
-    CCode(/* args */);
-    ~CCode();
-    void start();
+    void main();
 };
 
-CCode::CCode(/* args */)
-{
-}
-
-CCode::~CCode()
-{
-}
-void CCode::start()
+void CCode::main()
 {
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
