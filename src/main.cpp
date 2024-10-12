@@ -27,8 +27,7 @@ int main(void)
   
   while (1)
   {
-
-    code.start();
+    code.main();
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
     // // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     // a++;

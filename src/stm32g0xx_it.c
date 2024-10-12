@@ -51,14 +51,10 @@ void SysTick_Handler(void)
 /**  * @brief This function handles TIM6 global interrupt.  */
 void TIM6_IRQHandler(void)
 {
-
   HAL_TIM_IRQHandler(&htim6);
-  
   // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
 }
 void TIM7_IRQHandler(void)
 {
-
   HAL_TIM_IRQHandler(&htim7);
-
 }
