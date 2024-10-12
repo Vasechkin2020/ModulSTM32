@@ -2,15 +2,15 @@
 #include "main.h"
 #include "tim.h"
 #include "gpio.h"
+//---
+#include "code.h"
+
+CCode code;
 
 void SystemClock_Config(void);
 
-int a = 10;
-int b = 10;
-int c = 0;
 int main(void)
 {
-
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
@@ -25,16 +25,16 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
   
-  int a = 10;
-
   while (1)
   {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
-    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
-    a++;
-    c = a + 10;
-    c = a + b + c;
-    HAL_Delay(500); // Пауза 500 миллисекунд.
+
+    code.start();
+    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
+    // // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
+    // a++;
+    // c = a + 10;
+    // c = a + b + c;
+    // HAL_Delay(500); // Пауза 500 миллисекунд.
   }
 }
 
