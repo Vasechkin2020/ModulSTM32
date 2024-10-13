@@ -52,7 +52,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM6)
   {
-    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
     //code.timer6Run();
   }
   else if (htim->Instance == TIM7)
