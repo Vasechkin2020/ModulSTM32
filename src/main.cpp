@@ -1,4 +1,5 @@
 #include "main.h"
+#include "config.h"
 #include "tim.h"
 #include "gpio.h"
 //---
