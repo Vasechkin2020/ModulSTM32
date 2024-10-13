@@ -1,9 +1,6 @@
 #ifndef __CODE_H__
 #define __CODE_H__
 
-
-#include <stddef.h>
-
 class CCode
 {
 private:
