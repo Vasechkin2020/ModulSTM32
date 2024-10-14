@@ -1,6 +1,7 @@
 
 #include "main.h"
 #include "stm32g0xx_it.h"
+#include "config.h"
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim6;
@@ -49,7 +50,7 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**  * @brief This function handles TIM6 global interrupt.  */
-void TIM6_IRQHandler(void)
+void TIM6_IRQHandler(void) //Функция, которая обрабатывает прерывание на уровне HAL. Она сбрасывает флаг прерывания и вызывает пользовательский callback.
 {
   HAL_TIM_IRQHandler(&htim6);
   // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
@@ -58,3 +59,23 @@ void TIM7_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&htim7);
 }
+
+  // * @brief This function handles EXTI line 0 and line 1 interrupts.
+void EXTI0_1_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(micMotor1_Pin);
+}
+
+/**  * @brief This function handles EXTI line 2 and line 3 interrupts.  */
+void EXTI2_3_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(micMotor0_Pin);
+}
+
+/**  * @brief This function handles EXTI line 4 to 15 interrupts.  */
+void EXTI4_15_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(micMotor2_Pin);
+  HAL_GPIO_EXTI_IRQHandler(micMotor3_Pin);
+}
+
