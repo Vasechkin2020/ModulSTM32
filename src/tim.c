@@ -1,6 +1,8 @@
 #include "tim.h"
+// #include "code.h"
 
-//extern CCode code;
+extern void timer6();
+extern void timer7();
 
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
@@ -52,12 +54,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM6)
   {
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
-    //code.timer6Run();
+    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    timer6();
   }
   else if (htim->Instance == TIM7)
   {
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    timer7();
   }
 }
 
