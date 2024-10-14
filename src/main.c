@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "main.h"
 #include "config.h"
 #include "tim.h"
@@ -5,9 +9,9 @@
 //---
 #include "code.h"
 
-CCode code;
 
 void SystemClock_Config(void);
+
 
 int main(void)
 {
@@ -27,7 +31,7 @@ int main(void)
   
   while (1)
   {
-    code.main();
+    loop();
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
     // // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     // a++;

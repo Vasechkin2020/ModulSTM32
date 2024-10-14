@@ -1,19 +1,42 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define PIN_Motor_En GPIO_PIN_10 //
+#define Analiz1_Pin GPIO_PIN_13
+#define Analiz1_GPIO_Port GPIOC
 
-//*********************************************************************
-struct motorStruct // Структура для локального управления и сбора данных по моторам
-{
-  int32_t status = 0;      // Передаются импульсы на мотор или нет в данный момент, вращается или нет
-  int32_t position = 0;    // Текущая позиция в импульсах
-  int32_t destination = 0; // Цель назначение в позиции в импульсах
-  int8_t dir = 0;          // Направление вращения мотора 1 - по часовой 0 - против часовой
-  uint16_t dir_pin = 0;      // Пин определяющий направление вращения
-  uint16_t step_pin = 0;     // Пин определяющий импульс
-  uint16_t micric_pin = 0;   // Пин определяющий концевик
-};
-motorStruct motor[4]; // Все локальные данные по моторам
+#define Analiz2_Pin GPIO_PIN_10
+#define Analiz2_GPIO_Port GPIOC
+
+#define Led2_Pin GPIO_PIN_6
+#define Led2_GPIO_Port GPIOC
+
+#define Led1_Pin GPIO_PIN_7
+#define Led1_GPIO_Port GPIOC
+
+#define Step_Motor0_Pin GPIO_PIN_1
+#define Step_Motor0_GPIO_Port GPIOC
+#define Dir_Motor0_Pin GPIO_PIN_2
+#define Dir_Motor0_GPIO_Port GPIOC
+
+#define Step_Motor1_Pin GPIO_PIN_1
+#define Step_Motor1_GPIO_Port GPIOB
+#define Dir_Motor1_Pin GPIO_PIN_2
+#define Dir_Motor1_GPIO_Port GPIOB
+
+#define Step_Motor2_Pin GPIO_PIN_10
+#define Step_Motor2_GPIO_Port GPIOB
+#define Dir_Motor2_Pin GPIO_PIN_11
+#define Dir_Motor2_GPIO_Port GPIOB
+
+#define Dir_Motor3_Pin GPIO_PIN_14
+#define Step_Motor3_Pin GPIO_PIN_15
+#define Step_Motor3_GPIO_Port GPIOB
+#define Dir_Motor3_GPIO_Port GPIOB
+
+#define En_Motor_Pin GPIO_PIN_8
+#define En_Motor_GPIO_Port GPIOA
+
+
+
 
 #endif

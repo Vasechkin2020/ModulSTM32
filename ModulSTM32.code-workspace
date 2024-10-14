@@ -7,7 +7,8 @@
 	"settings": {
 		"files.associations": {
 			"gpio.h": "c",
-			"main.h": "c"
+			"main.h": "c",
+			"code.h": "c"
 		}
 	}
 }
