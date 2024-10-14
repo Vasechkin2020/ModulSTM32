@@ -54,7 +54,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM6)
   {
-    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
     timer6();
   }
   else if (htim->Instance == TIM7)
@@ -93,3 +93,4 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *tim_baseHandle)
     HAL_NVIC_DisableIRQ(TIM7_IRQn); /* TIM7 interrupt Deinit */
   }
 }
+

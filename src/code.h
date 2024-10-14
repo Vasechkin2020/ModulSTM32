@@ -11,9 +11,11 @@ bool flag_timer_10millisec = false;
 bool flag_timer_50millisec = false;
 bool flag_timer_1sec = false;
 
+GPIO_TypeDef *myPort;
+
 void loop();
 void timer6(); // Обработчик прерывания таймера TIM6	1 раз в 1 милисекунду
-void timer7(); // Обработчик прерывания таймера TIM7
+
 
 //********************************* ФУНКЦИИ ***************************************************************************
 
@@ -49,21 +51,22 @@ void timer6() // Обработчик прерывания таймера TIM6	1
 }
 void loop()
 {
-    //HAL_Delay(); // Пауза 500 миллисекунд.
-                    //----------------------------- 10 миллисекунд --------------------------------------
+
+    // HAL_Delay(); // Пауза 500 миллисекунд.
+    //----------------------------- 10 миллисекунд --------------------------------------
     if (flag_timer_10millisec)
     {
         flag_timer_10millisec = false;
         HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
-        //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
+        // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     }
     //----------------------------- 50 миллисекунд --------------------------------------
     if (flag_timer_50millisec)
     {
         flag_timer_50millisec = false;
-        HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin); // Инвертирование состояния выхода.
-        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
-        HAL_GPIO_TogglePin(En_Motor_GPIO_Port, En_Motor_Pin); // Инвертирование состояния выхода.
+        HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);             // Инвертирование состояния выхода.
+        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);             // Инвертирование состояния выхода.
+        HAL_GPIO_TogglePin(En_Motor_GPIO_Port, En_Motor_Pin);     // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin); // Инвертирование состояния выхода.
         // flag_data = true; // Есть новые данные по шине // РУчной вариант имитации пришедших данных с частотой 20Гц
     }
@@ -76,7 +79,5 @@ void loop()
     }
 }
 
-void timer7() // Обработчик прерывания таймера TIM7
-{
-}
+
 #endif /*CODE_H*/

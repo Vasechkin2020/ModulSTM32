@@ -8,6 +8,7 @@
 #include "gpio.h"
 //---
 #include "code.h"
+#include "motor.h"
 
 
 void SystemClock_Config(void);
@@ -28,10 +29,15 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
+
+  initMotor();          // Начальная инициализация и настройка шаговых моторов
+  setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
+  testMotorRun();
   
   while (1)
   {
     loop();
+    
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
     // // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     // a++;
