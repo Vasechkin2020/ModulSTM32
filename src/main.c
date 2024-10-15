@@ -10,9 +10,7 @@
 #include "code.h"
 #include "motor.h"
 
-
 void SystemClock_Config(void);
-
 
 int main(void)
 {
@@ -32,17 +30,13 @@ int main(void)
 
   initMotor();          // Начальная инициализация и настройка шаговых моторов
   setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
-  testMotorRun();
+  //testMotorRun();
+  setZeroMotor(); // Установка в ноль
   
   while (1)
   {
     loop();
-    
-    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8); // Инвертирование состояния выхода.
-    // // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
-    // a++;
-    // c = a + 10;
-    // c = a + b + c;
+    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     // HAL_Delay(500); // Пауза 500 миллисекунд.
   }
 }
