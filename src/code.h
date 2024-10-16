@@ -65,7 +65,6 @@ void loop()
     {
         flag_timer_50millisec = false;
         HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);             // Инвертирование состояния выхода.
-        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);             // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(En_Motor_GPIO_Port, En_Motor_Pin);     // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin); // Инвертирование состояния выхода.
         // flag_data = true; // Есть новые данные по шине // РУчной вариант имитации пришедших данных с частотой 20Гц
@@ -74,6 +73,7 @@ void loop()
     //----------------------------- 1 секунда --------------------------------------
     if (flag_timer_1sec) // Вызывается каждую секунду
     {
+        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);             // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
         flag_timer_1sec = false;
     }
