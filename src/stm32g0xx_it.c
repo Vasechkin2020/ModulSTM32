@@ -7,6 +7,9 @@
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim7;
 
+extern DMA_HandleTypeDef hdma_usart1_tx;
+extern UART_HandleTypeDef huart1;
+
 /******************************************************************************/
 /*           Cortex-M0+ Processor Interruption and Exception Handlers          */
 /******************************************************************************/
@@ -77,4 +80,16 @@ void EXTI4_15_IRQHandler(void) // Обработчик прерывания EXTI
 {
   HAL_GPIO_EXTI_IRQHandler(micMotor2_Pin);
   HAL_GPIO_EXTI_IRQHandler(micMotor3_Pin);
+}
+
+/**   * @brief This function handles DMA1 channel 1 interrupt.  */
+void DMA1_Channel1_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart1_tx);
+}
+
+/**   * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.   */
+void USART1_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart1);
 }

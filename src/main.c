@@ -3,6 +3,9 @@
 #include <stdint.h>
 
 #include "main.h"
+#include "dma.h"
+#include "usart.h"
+
 #include "config.h"
 #include "tim.h"
 #include "gpio.h"
@@ -25,12 +28,15 @@ int main(void)
   MX_TIM6_Init();
   MX_TIM7_Init();
 
+  MX_DMA_Init();
+  MX_USART1_UART_Init();
+
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
 
   initMotor();          // Начальная инициализация и настройка шаговых моторов
   setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
-  //testMotorRun();
+  testMotorRun();
   //setZeroMotor(); // Установка в ноль
   
   while (1)
