@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
+
+#define RX_BUFFER_SIZE 64                     // Размер буфера приема
+uint8_t rx_bufferUART1[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+uint8_t rx_bufferUART2[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+uint8_t rx_bufferUART3[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 
 #include "main.h"
 #include "dma.h"
@@ -12,7 +19,7 @@
 //---
 #include "code.h"
 #include "motor.h"
-//#include "laser80M.h"
+#include "laser80M.h"
 
 void SystemClock_Config(void);
 
@@ -32,33 +39,41 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
 
-  HAL_TIM_Base_Start_IT(&htim6);
-  HAL_TIM_Base_Start_IT(&htim7);
+  HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
+  HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
   initMotor();          // Начальная инициализация и настройка шаговых моторов
   setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
                         // testMotorRun();
                         // setZeroMotor(); // Установка в ноль
 
-  // uint8_t UART1_rxBuffer[5] = {0xFA, 0x04, 0x01, 0x80, 0x81}; // Single measurement (broadcast) 
-  uint8_t UART1_rxBuffer[5] = {0xFA, 0x04, 0x09, 0x1E, 0xDB}; //    FA 04 09 1E DB 30 м
-  SendDataDMA(UART1_rxBuffer, sizeof(UART1_rxBuffer));        // Отправляем данные по указанному UART
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+
+  laser80_setAddress(0x80);
+  laser80_stopMeasurement(0x80);
+  HAL_Delay(500);
+  laser80_controlLaser(1, 0x80);
   HAL_Delay(200);
+  laser80_controlLaser(0, 0x80);
+  laser80_setTimeInterval(0);
+  laser80_setResolution(1);
+  laser80_setRange(30);
+  laser80_setStartingPoint(1);
+  laser80_setFrequency(10);
 
-  uint8_t UART1_rxBuffer1[5] = {0xFA, 0x04, 0x0C, 0x02, 0xF4}; //    Установить Разрешение: FA 04 0C 02 F4 0,1 мм
-  SendDataDMA(UART1_rxBuffer1, sizeof(UART1_rxBuffer1));        // Отправляем данные по указанному UART
-  HAL_Delay(200);
+// Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
+  // Остановка DMA
+  HAL_UART_DMAStop(&huart1);
+  // Очистка буфера
+  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE);
+  //  // Перезапуск приема данных через DMA
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
 
-  uint8_t UART1_rxBuffer2[5] = {0xFA, 0x04, 0x0A, 0x14, 0xE4}; //  FA 04 0A 0A EE 10Hz - 8Hz real 125 миллисекунд FA 04 0A 14 E4 20Hz - 18Hz real 55 миллисекунд
-  SendDataDMA(UART1_rxBuffer2, sizeof(UART1_rxBuffer2));        // Отправляем данные по указанному UART
-  HAL_Delay(200);
+  // Непрерывное измерение
+  laser80_continuousMeasurement(0x80); // Данные пойдут только через 500 милисекунд
 
-  uint8_t UART1_rxBuffer3[4] = {0x80, 0x06, 0x03, 0x77}; //  80 06 03 77
-  SendDataDMA(UART1_rxBuffer3, sizeof(UART1_rxBuffer3));        // Отправляем данные по указанному UART
-  HAL_Delay(5000);
-
-  uint8_t UART1_rxBuffer4[4] = {0x80, 0x04, 0x02, 0x7A}; //  Остановить измерение/ выключения:(ADDR 04 02 CS) 80 04 02 7A
-  SendDataDMA(UART1_rxBuffer4, sizeof(UART1_rxBuffer4));        // Отправляем данные по указанному UART
+  // HAL_Delay(5000);
+  // laser80_stopMeasurement(0x80);
 
   while (1)
   {

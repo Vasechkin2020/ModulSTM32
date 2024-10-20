@@ -52,7 +52,26 @@
 #define micMotor3_GPIO_Port GPIOB
 #define micMotor3_EXTI_IRQn EXTI4_15_IRQn
 
+enum codeOperation // коды операций запросов по UART
+{
+    No,  // нет операций
+    Stop, // стоп измерения
+    Continuous, // Непрерывное измерение
+    Single, // Одиночное измерние
+    Address, // Установка адреса
+    Cache, // запрос кэш тз датчика
+    Status, // Включение отключение адтчика
+    Broadcast, // Запрос на измерение ко всем датчикам на линии, потом считать из кэша
+    StartPoint, // Установка точки отсчета
+    TimeInterval, // Установка интревала вывода при постоянных измерениях. Возможно это усреднение значений ???
+    SetRange,
+    SetResolution
+};
 
+enum codeOperation codeOperationUART1;
+enum codeOperation codeOperationUART2;
+enum codeOperation codeOperationUART3;
+enum codeOperation codeOperationUART4;
 
 
 
