@@ -16,7 +16,6 @@ GPIO_TypeDef *myPort;
 void loop();
 void timer6(); // Обработчик прерывания таймера TIM6	1 раз в 1 милисекунду
 
-
 //********************************* ФУНКЦИИ ***************************************************************************
 
 void timer6() // Обработчик прерывания таймера TIM6	1 раз в 1 милисекунду
@@ -49,6 +48,27 @@ void timer6() // Обработчик прерывания таймера TIM6	1
         flag_timer_1sec = true;
     }
 }
+// После настройки UART и DMA, данные можно отправить с помощью функции В этом примере data — указатель на буфер с данными, которые нужно отправить, а size — количество байт для отправки.
+void SendDataDMA(uint8_t *data, uint16_t size)
+{
+    // Запускаем передачу данных по DMA
+    if (HAL_UART_Transmit_DMA(&huart1, data, size) != HAL_OK)
+    {
+        // Обработка ошибки
+        Error_Handler();
+    }
+}
+
+// Когда DMA завершит передачу, произойдет прерывание, и вызовется функция обратного вызова HAL_UART_TxCpltCallback. В ней можно обработать завершение передачи, например, запустить передачу новых данных или освободить буфер.
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART1)
+    {
+        // Обработка завершения передачи по UART1 // Например, можно вывести сообщение о том, что передача завершена
+        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
+    }
+}
+
 void loop()
 {
 
@@ -73,11 +93,19 @@ void loop()
     //----------------------------- 1 секунда --------------------------------------
     if (flag_timer_1sec) // Вызывается каждую секунду
     {
-        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);             // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
+        // uint8_t UART1_rxBuffer[4] = {0xAA,0xFF,0xAA,0xFF};
+        //  uint8_t UART1_rxBuffer[1] = {0x56}; //Запрос версии "V"
+        //  uint8_t UART1_rxBuffer[1] = {0x4F}; // Включить лазер "O"
+        //  uint8_t UART1_rxBuffer[1] = {0x43}; // Выключить лазер "C"
+        //  uint8_t UART1_rxBuffer[5] = {0x80,0x06,0x05,0x01,0x74}; // Включить лазер 80M
+         // uint8_t UART1_rxBuffer[5] = {0x80,0x06,0x05,0x00,0x75}; // Выключить лазер 80M
+        // uint8_t UART1_rxBuffer[4] = {0xFA,0x06,0x04,0xFC}; // Включить лазер 80M
+        //  uint8_t UART1_rxBuffer[4] = {0xFA,0x06,0x06,0xFA}; // Single measurement (broadcast)
+       
+
         flag_timer_1sec = false;
     }
 }
-
 
 #endif /*CODE_H*/

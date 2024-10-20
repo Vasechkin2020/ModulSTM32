@@ -12,6 +12,7 @@
 //---
 #include "code.h"
 #include "motor.h"
+//#include "laser80M.h"
 
 void SystemClock_Config(void);
 
@@ -36,9 +37,29 @@ int main(void)
 
   initMotor();          // Начальная инициализация и настройка шаговых моторов
   setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
-  testMotorRun();
-  //setZeroMotor(); // Установка в ноль
-  
+                        // testMotorRun();
+                        // setZeroMotor(); // Установка в ноль
+
+  // uint8_t UART1_rxBuffer[5] = {0xFA, 0x04, 0x01, 0x80, 0x81}; // Single measurement (broadcast) 
+  uint8_t UART1_rxBuffer[5] = {0xFA, 0x04, 0x09, 0x1E, 0xDB}; //    FA 04 09 1E DB 30 м
+  SendDataDMA(UART1_rxBuffer, sizeof(UART1_rxBuffer));        // Отправляем данные по указанному UART
+  HAL_Delay(200);
+
+  uint8_t UART1_rxBuffer1[5] = {0xFA, 0x04, 0x0C, 0x02, 0xF4}; //    Установить Разрешение: FA 04 0C 02 F4 0,1 мм
+  SendDataDMA(UART1_rxBuffer1, sizeof(UART1_rxBuffer1));        // Отправляем данные по указанному UART
+  HAL_Delay(200);
+
+  uint8_t UART1_rxBuffer2[5] = {0xFA, 0x04, 0x0A, 0x14, 0xE4}; //  FA 04 0A 0A EE 10Hz - 8Hz real 125 миллисекунд FA 04 0A 14 E4 20Hz - 18Hz real 55 миллисекунд
+  SendDataDMA(UART1_rxBuffer2, sizeof(UART1_rxBuffer2));        // Отправляем данные по указанному UART
+  HAL_Delay(200);
+
+  uint8_t UART1_rxBuffer3[4] = {0x80, 0x06, 0x03, 0x77}; //  80 06 03 77
+  SendDataDMA(UART1_rxBuffer3, sizeof(UART1_rxBuffer3));        // Отправляем данные по указанному UART
+  HAL_Delay(5000);
+
+  uint8_t UART1_rxBuffer4[4] = {0x80, 0x04, 0x02, 0x7A}; //  Остановить измерение/ выключения:(ADDR 04 02 CS) 80 04 02 7A
+  SendDataDMA(UART1_rxBuffer4, sizeof(UART1_rxBuffer4));        // Отправляем данные по указанному UART
+
   while (1)
   {
     loop();
