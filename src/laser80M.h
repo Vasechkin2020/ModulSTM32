@@ -38,7 +38,7 @@ void laser80_stopMeasurement(uint8_t addr_)
     static uint8_t buf[4] = {0x00, 0x04, 0x02, 0x7A};
     buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
-    HAL_UART_Transmit_DMA(&huart1, buf, sizeof(buf));
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
     codeOperationUART1 = Stop;
 }
 
@@ -48,7 +48,7 @@ void laser80_continuousMeasurement(uint8_t addr_)
     static uint8_t buf[4] = {0x00, 0x06, 0x03, 0x00};
     buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
-    HAL_UART_Transmit_DMA(&huart1, buf, sizeof(buf));
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
     codeOperationUART1 = Continuous;
 }
 
@@ -80,7 +80,7 @@ void laser80_singleMeasurement(uint8_t addr_)
     uint8_t buf[4] = {addr_, 0x06, 0x02, 0x00}; // Команда без последнего байта, там будет контрольная сумма, а пока 0х00
     buf[3] = lazer80_calcCs(buf, 4);
     // Serial2.write(buf, 4);
-    HAL_UART_Transmit_DMA(&huart1, buf, sizeof(buf));
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
     HAL_Delay(5); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Single;
 
@@ -116,7 +116,7 @@ void laser80_broadcastMeasurement()
 {
     uint8_t buf[4] = {0xFA, 0x06, 0x06, 0xFA};
     // Serial2.write(buf, 4);
-    HAL_UART_Transmit_DMA(&huart1, buf, sizeof(buf));
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
     HAL_Delay(10); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Broadcast;
 }
@@ -127,7 +127,7 @@ bool laser80_getCache(uint8_t addr_)
     uint8_t buf[4] = {addr_, 0x06, 0x07, 0x00};
     buf[3] = lazer80_calcCs(buf, 4); // Считаем контрольную сумму и записываем последним байтом
                                      // Serial2.write(buf, 4);
-    HAL_UART_Transmit_DMA(&huart1, buf, sizeof(buf));
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
     HAL_Delay(1); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Cache;
 

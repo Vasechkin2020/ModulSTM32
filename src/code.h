@@ -53,15 +53,15 @@ void timer6() // Обработчик прерывания таймера TIM6	1
     }
 }
 // После настройки UART и DMA, данные можно отправить с помощью функции В этом примере data — указатель на буфер с данными, которые нужно отправить, а size — количество байт для отправки.
-void SendDataDMA(UART_HandleTypeDef huart, uint8_t *data, uint16_t size)
-{
-    // Запускаем передачу данных по DMA
-    if (HAL_UART_Transmit_DMA(&huart, data, size) != HAL_OK)
-    {
-        // Обработка ошибки
-        Error_Handler();
-    }
-}
+// void SendDataDMA(UART_HandleTypeDef huart, uint8_t *data, uint16_t size)
+// {
+//     // Запускаем передачу данных по DMA
+//     if (HAL_UART_Transmit_DMA(&huart, data, size) != HAL_OK)
+//     {
+//         // Обработка ошибки
+//         Error_Handler();
+//     }
+// }
 
 // Когда DMA завершит передачу, произойдет прерывание, и вызовется функция обратного вызова HAL_UART_TxCpltCallback. В ней можно обработать завершение передачи, например, запустить передачу новых данных или освободить буфер.
 // void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
