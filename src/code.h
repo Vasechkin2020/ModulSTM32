@@ -64,15 +64,15 @@ void SendDataDMA(UART_HandleTypeDef huart, uint8_t *data, uint16_t size)
 }
 
 // Когда DMA завершит передачу, произойдет прерывание, и вызовется функция обратного вызова HAL_UART_TxCpltCallback. В ней можно обработать завершение передачи, например, запустить передачу новых данных или освободить буфер.
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == USART1)
-    {
-        // Обработка завершения передачи по UART1 // Например, можно вывести сообщение о том, что передача завершена
-        // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
-        // HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);       // Инвертирование состояния выхода.
-    }
-}
+// void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+// {
+//     if (huart->Instance == USART1)
+//     {
+//         // Обработка завершения передачи по UART1 // Например, можно вывести сообщение о том, что передача завершена
+//         // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
+//         // HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);       // Инвертирование состояния выхода.
+//     }
+// }
 // Пример обработки данных
 void ProcessReceivedData(uint8_t *data, uint16_t size)
 {
@@ -86,7 +86,7 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
     // }
 }
 
-// Коллбэк, вызываемый при событии UART Idle или окончания передачи
+// Коллбэк, вызываемый при событии UART Idle по окончания приема 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     if (huart->Instance == USART1)
