@@ -19,6 +19,10 @@ extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_usart3_rx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 
+extern UART_HandleTypeDef huart4;
+extern DMA_HandleTypeDef hdma_usart4_rx;
+extern DMA_HandleTypeDef hdma_usart4_tx;
+
 /******************************************************************************/
 /*           Cortex-M0+ Processor Interruption and Exception Handlers          */
 /******************************************************************************/
@@ -110,6 +114,7 @@ void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler(void)
   HAL_DMA_IRQHandler(&hdma_usart2_tx);
   HAL_DMA_IRQHandler(&hdma_usart3_rx);
   HAL_DMA_IRQHandler(&hdma_usart3_tx);
+  HAL_DMA_IRQHandler(&hdma_usart4_rx);
 }
 
 /** * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.   */
