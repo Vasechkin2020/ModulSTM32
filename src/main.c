@@ -25,11 +25,14 @@ void SystemClock_Config(void);
 
 int main(void)
 {
+
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
   /* Configure the system clock */
   SystemClock_Config();
+
+  // uint32_t timeStart = HAL_GetTick(); // Запоминаем время старта
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -52,25 +55,22 @@ int main(void)
   laser80_setAddress(0x80);
   laser80_stopMeasurement(0x80);
   HAL_Delay(500);
-  laser80_controlLaser(1, 0x80);
-  HAL_Delay(200);
-  laser80_controlLaser(0, 0x80);
-  laser80_setTimeInterval(0);
-  laser80_setResolution(1);
-  laser80_setRange(30);
-  laser80_setStartingPoint(1);
-  laser80_setFrequency(10);
+  // laser80_controlLaser(1, 0x80);
+  // HAL_Delay(200);
+  // laser80_controlLaser(0, 0x80);
+  // laser80_setTimeInterval(0);
+  // laser80_setResolution(1);
+  // laser80_setRange(30);
+  // laser80_setStartingPoint(1);
+  // laser80_setFrequency(10);
 
-// Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
-  // Остановка DMA
-  HAL_UART_DMAStop(&huart1);
-  // Очистка буфера
-  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE);
-  //  // Перезапуск приема данных через DMA
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+  // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
+  HAL_UART_DMAStop(&huart1);  // Остановка DMA
+  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE);  // Очистка буфера
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
 
   // Непрерывное измерение
-  laser80_continuousMeasurement(0x80); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(0x80); // Данные пойдут только через 500 милисекунд
 
   // HAL_Delay(5000);
   // laser80_stopMeasurement(0x80);
@@ -78,6 +78,7 @@ int main(void)
   while (1)
   {
     loop();
+
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     // HAL_Delay(500); // Пауза 500 миллисекунд.
   }

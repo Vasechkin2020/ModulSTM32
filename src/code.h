@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "laser80M.h"
+
 //********************************* ПЕРЕМЕННЫЕ ***************************************************************************
 
 bool flag_timer_10millisec = false;
@@ -107,7 +109,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         if (codeOperationUART1 == Continuous) // Если ждем ответа на оправленную команду Continuous
         {
             flagContinius = 1;
-            HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
+            //HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
         }
 
         // После обработки вновь запустить прием
@@ -117,6 +119,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 
 void loop()
 {
+    // if (HAL_GetTick() - timeStart >= 10000)
+    // {
+    //     // laser80_stopMeasurement(0x80);
+    // }
     if (flagContinius == 1)
     {
         flagContinius = 0;
@@ -138,7 +144,7 @@ void loop()
     if (flag_timer_10millisec)
     {
         flag_timer_10millisec = false;
-        // HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
+        HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
         // HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);             // Инвертирование состояния выхода.
         // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     }
@@ -154,7 +160,7 @@ void loop()
     //----------------------------- 1 секунда --------------------------------------
     if (flag_timer_1sec) // Вызывается каждую секунду
     {
-        HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);       // Инвертирование состояния выхода.
+        HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin); // Инвертирование состояния выхода.
         // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
         //  uint8_t UART1_rxBuffer[4] = {0xAA,0xFF,0xAA,0xFF};
         //   uint8_t UART1_rxBuffer[1] = {0x56}; //Запрос версии "V"

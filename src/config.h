@@ -68,11 +68,6 @@ enum codeOperation // коды операций запросов по UART
     SetResolution
 };
 
-enum codeOperation codeOperationUART1;
-enum codeOperation codeOperationUART2;
-enum codeOperation codeOperationUART3;
-enum codeOperation codeOperationUART4;
-
 
 
 #endif

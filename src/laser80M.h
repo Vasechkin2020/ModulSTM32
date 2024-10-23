@@ -1,6 +1,11 @@
 #ifndef LASER80_H
 #define LASER80_H
 
+enum codeOperation codeOperationUART1;
+enum codeOperation codeOperationUART2;
+enum codeOperation codeOperationUART3;
+enum codeOperation codeOperationUART4;
+
 //     //*********************** ОБЬЯВЛЕНИЕ ФУНКЦИЙ *****************************************
 uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_); // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1
 //     // Функции применимык к конкретному датчику, так как задается адрес датчика
@@ -30,11 +35,10 @@ bool laser80_setResolution(uint8_t reso_);    // Установка разреш
 // Прекратить измерение
 void laser80_stopMeasurement(uint8_t addr_)
 {
-    uint8_t buf[4] = {addr_, 0x04, 0x02, 0x7A};
+    static uint8_t buf[4] = {0x00, 0x04, 0x02, 0x7A};
+    buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
     HAL_UART_Transmit_DMA(&huart1, buf, sizeof(buf));
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
-    HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Stop;
 }
 
