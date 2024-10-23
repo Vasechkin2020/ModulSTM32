@@ -41,6 +41,7 @@ int main(void)
 
   MX_DMA_Init();
   MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
