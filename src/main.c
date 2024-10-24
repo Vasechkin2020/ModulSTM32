@@ -48,39 +48,99 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
-  initMotor();          // Начальная инициализация и настройка шаговых моторов
-  setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
-                        // testMotorRun();
-                        // setZeroMotor(); // Установка в ноль
+  // initMotor();          // Начальная инициализация и настройка шаговых моторов
+  // setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
+  // testMotorRun();
+  // setZeroMotor(); // Установка в ноль
 
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
 
-  laser80_setAddress(0x80);
-  laser80_stopMeasurement(0x80);
-  HAL_Delay(500);
-  // laser80_controlLaser(1, 0x80);
-  // HAL_Delay(200);
-  // laser80_controlLaser(0, 0x80);
-  // laser80_setTimeInterval(0);
-  // laser80_setResolution(1);
-  // laser80_setRange(30);
-  // laser80_setStartingPoint(1);
-  // laser80_setFrequency(10);
+  laser80_setAddress(huart1, 0x80);
+  laser80_setAddress(huart2, 0x80);
+  laser80_setAddress(huart3, 0x80);
+  laser80_setAddress(huart4, 0x80);
+  HAL_Delay(100);
+  laser80_stopMeasurement(huart1, 0x80);
+  laser80_stopMeasurement(huart2, 0x80);
+  laser80_stopMeasurement(huart3, 0x80);
+  laser80_stopMeasurement(huart4, 0x80);
+  HAL_Delay(100);
+  laser80_controlLaser(huart1, 1, 0x80);
+  laser80_controlLaser(huart2, 1, 0x80);
+  laser80_controlLaser(huart3, 1, 0x80);
+  laser80_controlLaser(huart4, 1, 0x80);
+  HAL_Delay(2000);
+  laser80_controlLaser(huart1, 0, 0x80);
+  laser80_controlLaser(huart2, 0, 0x80);
+  laser80_controlLaser(huart3, 0, 0x80);
+  laser80_controlLaser(huart4, 0, 0x80);
+  HAL_Delay(100);
+
+  // laser80_setTimeInterval(huart1,0);
+  // laser80_setResolution(huart1,1);
+  // laser80_setRange(huart1,30);
+  // laser80_setStartingPoint(huart1,1);
+  laser80_setFrequency(huart1, 3);
+  laser80_setFrequency(huart2, 3);
+  laser80_setFrequency(huart3, 3);
+  laser80_setFrequency(huart4, 3);
 
   // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
-  HAL_UART_DMAStop(&huart1);  // Остановка DMA
-  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE);  // Очистка буфера
+  HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
+  HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
+  HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
+  HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
+
+  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE);                             // Очистка буфера
+  memset(rx_bufferUART2, 0, RX_BUFFER_SIZE);                             // Очистка буфера
+  memset(rx_bufferUART3, 0, RX_BUFFER_SIZE);                             // Очистка буфера
+  memset(rx_bufferUART4, 0, RX_BUFFER_SIZE);                             // Очистка буфера
+  
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
 
   // Непрерывное измерение
-  // laser80_continuousMeasurement(0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart1,0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart2,0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart3,0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart4,0x80); // Данные пойдут только через 500 милисекунд
 
   // HAL_Delay(5000);
-  // laser80_stopMeasurement(0x80);
+  // laser80_stopMeasurement(huart1,0x80);
+
+  // int a = 0;
+  // int b = 2;
+  // int c = 0;
+  // float aaa = 3.1415255;
+  // uint8_t MSG[35] = {'\0'};
+  // uint8_t X = 0;
 
   while (1)
   {
     loop();
+
+    // a++;
+    // b = a * 2;
+    // c = a + b;
+    // printf("test3 %i %i %i %.2f \n", a, b, c, aaa);
+    // printf("Тест %.4f \n", aaa);
+
+    // float my_float = 1.23456;
+    // char buffer[20];
+    // sprintf(buffer, "%.3f", my_float);
+    // printf("Мой поплавок в виде строки: %s\n", buffer);
+
+    // int i = 132;
+    // printf("Result is: %d.%d \n", i / 10, i % 10);
+
+    // sprintf(MSG, "Hello VASI! Tracing X = %d\r\n", X);
+    // HAL_UART_Transmit(&huart4, MSG, sizeof(MSG), 100);
+    // HAL_Delay(500);
 
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     // HAL_Delay(500); // Пауза 500 миллисекунд.
@@ -122,6 +182,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+int __io_putchar(int ch)
+{
+  HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
+  return ch;
 }
 
 void Error_Handler(void)

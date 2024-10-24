@@ -86,14 +86,30 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
     // }
 }
 
-// Коллбэк, вызываемый при событии UART Idle по окончания приема 
+struct dataUART
+{
+    uint8_t flag;
+    uint8_t len;
+};
+
+struct dataUART dataUART1;
+struct dataUART dataUART2;
+struct dataUART dataUART3;
+struct dataUART dataUART4;
+
+// Коллбэк, вызываемый при событии UART Idle по окончания приема
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     if (huart->Instance == USART1)
     {
-        HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
-        HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
+        // HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
+        // HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
         // Обработка полученных данных
+        dataUART1.flag = 1;
+        dataUART1.len = Size;
+        // После обработки вновь запустить прием
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE);
+
         // ProcessReceivedData(rx_bufferUART1, Size);
         // if (codeOperationUART1 == Stop) // Если ждем ответа на оправленную команду Stop
         // {
@@ -106,15 +122,48 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         //         // printf("stopMeasurement ERROR \n");
         //     }
         // }
-        if (codeOperationUART1 == Continuous) // Если ждем ответа на оправленную команду Continuous
-        {
-            flagContinius = 1;
-            //HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
-        }
-
-        // После обработки вновь запустить прием
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE);
+        // if (codeOperationUART1 == Continuous) // Если ждем ответа на оправленную команду Continuous
+        // {
+        //     flagContinius = 1;
+        //     //HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
+        // }
     }
+    if (huart->Instance == USART2)
+    {
+        dataUART2.flag = 1; // Обработка полученных данных
+        dataUART2.len = Size;
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // После обработки вновь запустить прием
+    }
+    if (huart->Instance == USART3)
+    {
+        dataUART3.flag = 1; // Обработка полученных данных
+        dataUART3.len = Size;
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // После обработки вновь запустить прием
+    }
+    if (huart->Instance == USART4)
+    {
+        dataUART4.flag = 1; // Обработка полученных данных
+        dataUART4.len = Size;
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // После обработки вновь запустить прием
+    }
+}
+// Вычисление дистанции по полученному буферу или ошибка
+float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_)
+{
+    float distance = 0;
+    if (len_ == 11 && rx_bufferUART[3] != 0x45 && rx_bufferUART[4] != 0x52 && rx_bufferUART[5] != 0x52) // по кодам ASCII ERR
+    {
+        uint8_t sot = (rx_bufferUART[3] - 0x30) * 100;    // По таблице ASCII отнимаем 48 и получаем сколько сотен метров
+        uint8_t des = (rx_bufferUART[4] - 0x30) * 10;     // По таблице ASCII отнимаем 48 и получаем сколько десятков метров
+        uint8_t met = (rx_bufferUART[5] - 0x30) * 1;      // По таблице ASCII отнимаем 48 и получаем сколько единиц метров
+        float desMet = (rx_bufferUART[7] - 0x30) * 0.1;   // По таблице ASCII отнимаем 48 и получаем сколько десятых долей метра
+        float sotMet = (rx_bufferUART[8] - 0x30) * 0.01;  // По таблице ASCII отнимаем 48 и получаем сколько сотых долей метра
+        float tysMet = (rx_bufferUART[9] - 0x30) * 0.001; // По таблице ASCII отнимаем 48 и получаем сколько тысячных долей метра
+        distance = sot + des + met + desMet + sotMet + tysMet;
+        //printf("Meas= %i - %i - %i . %.1f %.2f %.3f | ", sot, des, met, desMet, sotMet, tysMet);
+        printf("Distance= %.3f \n", distance);
+    }
+    return distance;
 }
 
 void loop()
@@ -123,20 +172,36 @@ void loop()
     // {
     //     // laser80_stopMeasurement(0x80);
     // }
+    if (dataUART1.flag == 1)
+    {
+        dataUART1.flag = 0;
+        float dist = calcDistance(rx_bufferUART1, dataUART1.len);
+        if (dist != 0) // Расчитываем дистанцию. Возвращаем значение или 0 если ошибка
+        {
+            printf("Dist UART1 = %.3f \n", dist);
+        }
+        else
+        {
+            printf("Error dataUART1. \n");
+        }
+    }
+    else if (dataUART2.flag == 1)
+    {
+        dataUART2.flag = 0;
+    }
+    else if (dataUART3.flag == 1)
+    {
+        dataUART3.flag = 0;
+    }
+    else if (dataUART4.flag == 1)
+    {
+        dataUART4.flag = 0;
+    }
+
     if (flagContinius == 1)
     {
         flagContinius = 0;
         HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
-
-        uint8_t sot = (rx_bufferUART1[3] - 0x30) * 100;    // По таблице ASCII отнимаем 48 и получаем сколько сотен метров
-        uint8_t des = (rx_bufferUART1[4] - 0x30) * 10;     // По таблице ASCII отнимаем 48 и получаем сколько десятков метров
-        uint8_t met = (rx_bufferUART1[5] - 0x30) * 1;      // По таблице ASCII отнимаем 48 и получаем сколько единиц метров
-        float desMet = (rx_bufferUART1[7] - 0x30) * 0.1;   // По таблице ASCII отнимаем 48 и получаем сколько десятых долей метра
-        float sotMet = (rx_bufferUART1[8] - 0x30) * 0.01;  // По таблице ASCII отнимаем 48 и получаем сколько сотых долей метра
-        float tysMet = (rx_bufferUART1[9] - 0x30) * 0.001; // По таблице ASCII отнимаем 48 и получаем сколько тысячных долей метра
-        distanceUART1 = sot + des + met + desMet + sotMet + tysMet;
-        printf("Meas= %i - %i - %i . %.1f %.2f %.3f | ", sot, des, met, desMet, sotMet, tysMet);
-        printf("Distance= %f \n", distanceUART1);
     }
 
     // HAL_Delay(); // Пауза 500 миллисекунд.

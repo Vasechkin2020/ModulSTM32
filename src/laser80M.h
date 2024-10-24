@@ -10,20 +10,20 @@ enum codeOperation codeOperationUART4;
 uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_); // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1
 //     // Функции применимык к конкретному датчику, так как задается адрес датчика
 
-void laser80_controlLaser(uint8_t status_, uint8_t addr_); // Управление лазером 1- Включен 0-Выключен
+void laser80_controlLaser(UART_HandleTypeDef huart, uint8_t status_, uint8_t addr_); // Управление лазером 1- Включен 0-Выключен
 
-void laser80_singleMeasurement(uint8_t addr_);     // Одиночное измерение примерно 800 милисекунд
-void laser80_continuousMeasurement(uint8_t addr_); // Непрерывное измерение
-void laser80_stopMeasurement(uint8_t addr_);       // Прекратить измерение
+void laser80_singleMeasurement(UART_HandleTypeDef huart, uint8_t addr_);     // Одиночное измерение примерно 800 милисекунд
+void laser80_continuousMeasurement(UART_HandleTypeDef huart, uint8_t addr_); // Непрерывное измерение
+void laser80_stopMeasurement(UART_HandleTypeDef huart, uint8_t addr_);       // Прекратить измерение
 
-void laser80_setAddress(uint8_t addr_);       // Установка нового адрес на датчике
-void laser80_broadcastMeasurement();          // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
-bool laser80_getCache(uint8_t addr_);         // Считывание данных из буфера датчика результат измерения
-bool laser80_setFrequency(uint8_t freq_);     // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
-bool laser80_setStartingPoint(uint8_t data_); // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
-bool laser80_setTimeInterval(uint8_t data_);  // Установка инрервала вывода значения при настройке. Не понятно что это.
-bool laser80_setRange(uint8_t range_);        // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
-bool laser80_setResolution(uint8_t reso_);    // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
+void laser80_setAddress(UART_HandleTypeDef huart, uint8_t addr_); // Установка нового адрес на датчике
+void laser80_broadcastMeasurement(UART_HandleTypeDef huart);                              // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
+bool laser80_getCache(UART_HandleTypeDef huart, uint8_t addr_);                             // Считывание данных из буфера датчика результат измерения
+bool laser80_setFrequency(UART_HandleTypeDef huart, uint8_t freq_);                         // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
+bool laser80_setStartingPoint(UART_HandleTypeDef huart, uint8_t data_);                     // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
+bool laser80_setTimeInterval(UART_HandleTypeDef huart, uint8_t data_);                      // Установка инрервала вывода значения при настройке. Не понятно что это.
+bool laser80_setRange(UART_HandleTypeDef huart, uint8_t range_);                            // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
+bool laser80_setResolution(UART_HandleTypeDef huart, uint8_t reso_);                        // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
 
 //     // Функции применяются ко всем датчикам на линии и поэтому калибровку и прочее делать с одиночным датчиком
 //     bool setDistanceModification(int8_t data_); // Модификация дистанции. Думаю что колибровка измерений. Можно в плюс или в минус
@@ -33,32 +33,32 @@ bool laser80_setResolution(uint8_t reso_);    // Установка разреш
 //     //*********************** РЕАЛИЗАЦИЯ ФУНКЦИЙ *****************************************
 
 // Прекратить измерение
-void laser80_stopMeasurement(uint8_t addr_)
+void laser80_stopMeasurement(UART_HandleTypeDef huart, uint8_t addr_)
 {
     static uint8_t buf[4] = {0x00, 0x04, 0x02, 0x7A};
     buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     codeOperationUART1 = Stop;
 }
 
 // Непрерывное измерение
-void laser80_continuousMeasurement(uint8_t addr_)
+void laser80_continuousMeasurement(UART_HandleTypeDef huart, uint8_t addr_)
 {
     static uint8_t buf[4] = {0x00, 0x06, 0x03, 0x00};
     buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     codeOperationUART1 = Continuous;
 }
 
 // //************************************************************************************
 // Установка нового адрес на датчике Широковещательный команда, смотреть что датчик один в этот момент на шине.
-void laser80_setAddress(uint8_t addr_)
+void laser80_setAddress(UART_HandleTypeDef huart, uint8_t addr_)
 {
     uint8_t buf[5] = {0xFA, 0x04, 0x01, addr_, 0x00};
     buf[4] = lazer80_calcCs(buf, 5);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     HAL_Delay(50); // Задержка на время ожидания ответа и сразу разбираем ответ который будет в буфере который указали для ожмдания прерывания по DMA
     printf("setAddress DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
     if (rx_bufferUART1[0] == 0xFA && rx_bufferUART1[1] == 0x04 && rx_bufferUART1[2] == 0x81 && rx_bufferUART1[3] == 0x81)
@@ -73,14 +73,14 @@ void laser80_setAddress(uint8_t addr_)
     }
 }
 // Одиночное измерение примерно 800 милисекунд
-void laser80_singleMeasurement(uint8_t addr_)
+void laser80_singleMeasurement(UART_HandleTypeDef huart, uint8_t addr_)
 {
     // digitalWrite(PIN_LED, 1);
     // clearBuf();
     uint8_t buf[4] = {addr_, 0x06, 0x02, 0x00}; // Команда без последнего байта, там будет контрольная сумма, а пока 0х00
     buf[3] = lazer80_calcCs(buf, 4);
     // Serial2.write(buf, 4);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     HAL_Delay(5); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Single;
 
@@ -112,22 +112,22 @@ void laser80_singleMeasurement(uint8_t addr_)
 }
 
 // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
-void laser80_broadcastMeasurement()
+void laser80_broadcastMeasurement(UART_HandleTypeDef huart)
 {
     uint8_t buf[4] = {0xFA, 0x06, 0x06, 0xFA};
     // Serial2.write(buf, 4);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     HAL_Delay(10); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Broadcast;
 }
 // Считывание данных из буфера датчика результат измерения
-bool laser80_getCache(uint8_t addr_)
+bool laser80_getCache(UART_HandleTypeDef huart, uint8_t addr_)
 {
     // clearBuf();
     uint8_t buf[4] = {addr_, 0x06, 0x07, 0x00};
     buf[3] = lazer80_calcCs(buf, 4); // Считаем контрольную сумму и записываем последним байтом
                                      // Serial2.write(buf, 4);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     HAL_Delay(1); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Cache;
 
@@ -154,20 +154,20 @@ bool laser80_getCache(uint8_t addr_)
 }
 
 // Управление лазером 1- Включен 0-Выключен
-void laser80_controlLaser(uint8_t status_, uint8_t addr_)
+void laser80_controlLaser(UART_HandleTypeDef huart, uint8_t status_, uint8_t addr_)
 {
     // clearBuf();
     if (status_ == 0) //  Выключить
     {
         uint8_t buf[5] = {addr_, 0x06, 0x05, 0x00, 0x00};
         buf[4] = lazer80_calcCs(buf, 5);
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     else //  Включить
     {
         uint8_t buf[5] = {addr_, 0x06, 0x05, 0x01, 0x00};
         buf[4] = lazer80_calcCs(buf, 5);
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = Status;
@@ -191,17 +191,17 @@ void laser80_controlLaser(uint8_t status_, uint8_t addr_)
     // }
 }
 // Установка интервала вывода значения при настройке. Не понятно что это.
-bool laser80_setTimeInterval(uint8_t data_)
+bool laser80_setTimeInterval(UART_HandleTypeDef huart, uint8_t data_)
 {
     if (data_ == 0) // через 0 секунду
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x05, 0x00, 0xFD};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (data_ == 1) // через 1 секунду
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x05, 0x01, 0xFC};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = TimeInterval;
@@ -258,17 +258,17 @@ bool laser80_setTimeInterval(uint8_t data_)
 // }
 
 // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
-bool laser80_setStartingPoint(uint8_t data_)
+bool laser80_setStartingPoint(UART_HandleTypeDef huart, uint8_t data_)
 {
     if (data_ == 0) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x08, 0x00, 0xFA};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (data_ == 1) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x08, 0x01, 0xF9};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = StartPoint;
@@ -304,32 +304,32 @@ bool laser80_setStartingPoint(uint8_t data_)
 // }
 
 // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
-bool laser80_setRange(uint8_t range_)
+bool laser80_setRange(UART_HandleTypeDef huart, uint8_t range_)
 {
     if (range_ == 5) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x05, 0xF4};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (range_ == 10) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x0A, 0xEE};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (range_ == 30) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x1E, 0xDB};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (range_ == 50) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x32, 0xC7};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (range_ == 80) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x50, 0xA9};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = SetRange;
@@ -348,17 +348,17 @@ bool laser80_setRange(uint8_t range_)
 }
 
 // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
-bool laser80_setResolution(uint8_t reso_)
+bool laser80_setResolution(UART_HandleTypeDef huart, uint8_t reso_)
 {
     if (reso_ == 1) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0C, 0x01, 0xF5};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (reso_ == 2) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0C, 0x02, 0xF4};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = SetResolution;
@@ -377,27 +377,27 @@ bool laser80_setResolution(uint8_t reso_)
 }
 
 // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
-bool laser80_setFrequency(uint8_t freq_)
+bool laser80_setFrequency(UART_HandleTypeDef huart, uint8_t freq_)
 {
     if (freq_ == 3) //  примерно 3 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x00, 0xF8};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (freq_ == 5) //  фактически 7 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x05, 0xF3};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (freq_ == 10) //  фактически 8 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x0A, 0xEE};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     if (freq_ == 20) //  фактически 18 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x14, 0xE4};
-        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25);
     // printf("setFrequency DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
