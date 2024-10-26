@@ -88,8 +88,10 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
 
 struct dataUART
 {
-    uint8_t flag;
-    uint8_t len;
+    uint8_t flag;   // Флаг готовности данных
+    uint8_t len;    // Длинна полученных данных в буфере
+    uint8_t num;    // Номер UART
+    float distance; // Дистанция по последнему хорошему измерению
 };
 
 struct dataUART dataUART1;
@@ -107,6 +109,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         // Обработка полученных данных
         dataUART1.flag = 1;
         dataUART1.len = Size;
+        dataUART1.num = 1;
         // После обработки вновь запустить прием
         HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE);
 
@@ -132,18 +135,21 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     {
         dataUART2.flag = 1; // Обработка полученных данных
         dataUART2.len = Size;
+        dataUART2.num = 2;
         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // После обработки вновь запустить прием
     }
     if (huart->Instance == USART3)
     {
         dataUART3.flag = 1; // Обработка полученных данных
         dataUART3.len = Size;
+        dataUART3.num = 3;
         HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // После обработки вновь запустить прием
     }
     if (huart->Instance == USART4)
     {
         dataUART4.flag = 1; // Обработка полученных данных
         dataUART4.len = Size;
+        dataUART4.num = 4;
         HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // После обработки вновь запустить прием
     }
 }
@@ -160,7 +166,7 @@ float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_)
         float sotMet = (rx_bufferUART[8] - 0x30) * 0.01;  // По таблице ASCII отнимаем 48 и получаем сколько сотых долей метра
         float tysMet = (rx_bufferUART[9] - 0x30) * 0.001; // По таблице ASCII отнимаем 48 и получаем сколько тысячных долей метра
         distance = sot + des + met + desMet + sotMet + tysMet;
-        //printf("Meas= %i - %i - %i . %.1f %.2f %.3f | ", sot, des, met, desMet, sotMet, tysMet);
+        // printf("Meas= %i - %i - %i . %.1f %.2f %.3f | ", sot, des, met, desMet, sotMet, tysMet);
         printf("Distance= %.3f \n", distance);
     }
     return distance;
@@ -178,11 +184,12 @@ void loop()
         float dist = calcDistance(rx_bufferUART1, dataUART1.len);
         if (dist != 0) // Расчитываем дистанцию. Возвращаем значение или 0 если ошибка
         {
-            printf("Dist UART1 = %.3f \n", dist);
+            printf("Dist UART%i = %.3f \n", dataUART1.num, dist);
+            dataUART1.distance = dist;
         }
         else
         {
-            printf("Error dataUART1. \n");
+            printf("Error dataUART%i. \n", dataUART1.num);
         }
     }
     else if (dataUART2.flag == 1)
