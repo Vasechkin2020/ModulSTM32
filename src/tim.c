@@ -1,8 +1,13 @@
 #include "tim.h"
+#include "config.h"
 // #include "code.h"
 
 extern void timer6();
 extern void timer7();
+extern void isrMicMotor0();
+extern void isrMicMotor1();
+extern void isrMicMotor2();
+extern void isrMicMotor3();
 
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
@@ -54,13 +59,53 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM6)
   {
-    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    // HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
     timer6();
   }
   else if (htim->Instance == TIM7)
   {
-    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10);
+    // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
     timer7();
+  }
+}
+
+// Callback-функция, которая вызывается при срабатывании прерывания По спаду уровня
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == micMotor0_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+    isrMicMotor0();
+    // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
+    // HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
+    // HAL_GPIO_WritePin(Led2_GPIO_Port, Led2_Pin, GPIO_PIN_RESET);
+  }
+  else if (GPIO_Pin == micMotor1_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+    isrMicMotor1();
+  }
+  else if (GPIO_Pin == micMotor2_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+    isrMicMotor2();
+  }
+  else if (GPIO_Pin == micMotor3_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+    isrMicMotor2();
+  }
+}
+// Callback-функция, которая вызывается при срабатывании прерывания По подьему уровня
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == micMotor0_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+  }
+  else if (GPIO_Pin == micMotor1_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+  }
+  else if (GPIO_Pin == micMotor2_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
+  }
+  else if (GPIO_Pin == micMotor3_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  {
   }
 }
 

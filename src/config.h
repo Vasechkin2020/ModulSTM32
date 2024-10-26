@@ -36,6 +36,37 @@
 #define En_Motor_Pin GPIO_PIN_8
 #define En_Motor_GPIO_Port GPIOA
 
+#define micMotor0_Pin GPIO_PIN_3
+#define micMotor0_GPIO_Port GPIOC
+#define micMotor0_EXTI_IRQn EXTI2_3_IRQn
+
+#define micMotor1_Pin GPIO_PIN_0
+#define micMotor1_GPIO_Port GPIOB
+#define micMotor1_EXTI_IRQn EXTI0_1_IRQn
+
+#define micMotor2_Pin GPIO_PIN_12
+#define micMotor2_GPIO_Port GPIOB
+#define micMotor2_EXTI_IRQn EXTI4_15_IRQn
+
+#define micMotor3_Pin GPIO_PIN_13
+#define micMotor3_GPIO_Port GPIOB
+#define micMotor3_EXTI_IRQn EXTI4_15_IRQn
+
+enum codeOperation // коды операций запросов по UART
+{
+    No,  // нет операций
+    Stop, // стоп измерения
+    Continuous, // Непрерывное измерение
+    Single, // Одиночное измерние
+    Address, // Установка адреса
+    Cache, // запрос кэш тз датчика
+    Status, // Включение отключение адтчика
+    Broadcast, // Запрос на измерение ко всем датчикам на линии, потом считать из кэша
+    StartPoint, // Установка точки отсчета
+    TimeInterval, // Установка интревала вывода при постоянных измерениях. Возможно это усреднение значений ???
+    SetRange,
+    SetResolution
+};
 
 
 
