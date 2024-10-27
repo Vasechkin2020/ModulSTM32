@@ -9,7 +9,8 @@
 			"gpio.h": "c",
 			"main.h": "c",
 			"code.h": "c",
-			"motor.h": "c"
+			"motor.h": "c",
+			"slavespi.h": "c"
 		}
 	}
 }

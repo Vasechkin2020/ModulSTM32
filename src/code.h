@@ -1,11 +1,16 @@
 #ifndef CODE_H
 #define CODE_H
 
+#define MOTOR yes
+#define SPI_protocol yes
+#define LASER yes
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "laser80M.h"
+#include "slaveSPI.h"
 
 //********************************* ПЕРЕМЕННЫЕ ***************************************************************************
 
@@ -20,7 +25,14 @@ void timer6(); // Обработчик прерывания таймера TIM6	
 float distanceUART1 = 0;
 int flagContinius = 0;
 
+extern volatile uint32_t millisCounter;
+
 //********************************* ФУНКЦИИ ***************************************************************************
+// Функция для возврата количества миллисекунд
+uint32_t millis(void)
+{
+    return millisCounter;
+}
 
 void timer6() // Обработчик прерывания таймера TIM6	1 раз в 1 милисекунду
 {
@@ -172,12 +184,109 @@ float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_)
     return distance;
 }
 
+// Собираем нужные данные и пишем в структуру на отправку
+void collect_Data_for_Send()
+{
+    Modul2Data_send.id++;
+    // Modul2Data_send.pinMotorEn = digitalRead(PIN_Motor_En); // Считываем состояние пина драйверов
+
+    for (int i = 0; i < 4; i++) // Информация по моторам всегда
+    {
+        // Modul2Data_send.motor[i].status = motor[i].status; // Считываем состояние пина драйверов
+        // Modul2Data_send.motor[i].position = tfLocalToGlobal360(getAngle(motor[i].position), i);       // Записываем текущую позицию преобразуя из импульсов в градусы, надо еще в глобальную систему преобразовывать
+        // Modul2Data_send.motor[i].destination = tfLocalToGlobal360(getAngle(motor[i].destination), i); // Считываем цель по позиции, надо еще в глобальную систему преобразовывать
+        // Modul2Data_send.motor[i].position = getAngle(motor[i].position);       // Записываем текущую позицию преобразуя из импульсов в градусы, надо еще в глобальную систему преобразовывать
+        // Modul2Data_send.motor[i].destination = getAngle(motor[i].destination); // Считываем цель по позиции, надо еще в глобальную систему преобразовывать
+        // Modul2Data_send.micric[i] = digitalRead(motor[i].micric_pin);          //
+    }
+
+    for (int i = 0; i < 4; i++) // Информация по лазерам по ситуации
+    {
+
+        if (Data2Modul_receive.controlLaser.mode == 1) // Если команда работать с датчиком
+        {
+            // Modul2Data_send.laser[i].status = sk60plus[i]._status;                             // Считываем статаус дальномера
+            // Modul2Data_send.laser[i].distance = (float)sk60plus[i]._distance * 0.001;          // Считываем измерение растояния и пересчитываем в метры !!!
+            // Modul2Data_send.laser[i].signalQuality = sk60plus[i]._signalQuality;               // Считываем угол в котором произмели измерение
+            // Modul2Data_send.laser[i].angle = sk60plus[i]._angle;                               // Считываем угол в котором произвели измерение
+            // Modul2Data_send.laser[i].numPillar = Data2Modul_receive.controlMotor.numPillar[i]; // Переписываем номер столба на который измеряли расстояние
+        }
+        else
+        {
+            // Modul2Data_send.laser[i].status = 0;        // Считываем статаус дальномера
+            // Modul2Data_send.laser[i].distance = 0;      // Считываем измерение растояния и пересчитываем в метры !!!
+            // Modul2Data_send.laser[i].signalQuality = 0; // Считываем угол в котором произмели измерение
+            // Modul2Data_send.laser[i].angle = 0;         // Считываем угол в котором произвели измерение
+            // Modul2Data_send.laser[i].numPillar = -1;    // Переписываем номер столба на который измеряли расстояние
+        }
+    }
+
+    Modul2Data_send.spi.all = spi.all;
+    Modul2Data_send.spi.bed = spi.bed;
+    uint32_t cheksum_send = 0;                                          // Считаем контрольную сумму отправляемой структуры
+    unsigned char *adr_structura = (unsigned char *)(&Modul2Data_send); // Запоминаем адрес начала структуры. Используем для побайтной передачи
+    for (int i = 0; i < sizeof(Modul2Data_send) - 4; i++)
+    {
+        cheksum_send += adr_structura[i]; // Побайтно складываем все байты структуры кроме последних 4 в которых переменная в которую запишем результат
+    }
+    Modul2Data_send.cheksum = cheksum_send;
+    // Modul2Data_send.cheksum = measureCheksum_Modul2Data(Modul2Data_send); // Вычисляем контрольную сумму структуры и пишем ее значение в последний элемент
+}
+
+// Отработка пришедших команд. Изменение скорости, траектории и прочее
+void executeDataReceive()
+{
+  static int mode_pred = 0; // Переменная для запоминания предыдущей команды
+  // Команда УПРАВЛЕНИЯ УГЛАМИ
+  if (Data2Modul_receive.controlMotor.mode == 0) // Если пришла команда 0 Управления
+  {
+    // Ничего не делаем
+  }
+  if (Data2Modul_receive.controlMotor.mode == 1) // Если пришла команда 1 Управления
+  {
+    for (int i = 0; i < 4; i++)
+    {
+      //setMotorAngle(i, Data2Modul_receive.controlMotor.angle[i]);
+    }
+  }
+  // Команда КОЛИБРОВКИ И УСТАНОВКИ В 0
+  if (Data2Modul_receive.controlMotor.mode == 9 && Data2Modul_receive.controlMotor.mode != mode_pred) // Если пришла команда 9 Колибровки и предыдущая была другая
+  {
+    //setZeroMotor(); // Установка в ноль
+  }
+
+  mode_pred = Data2Modul_receive.controlMotor.mode; // Запоминаяем команду
+  //     // printf(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
+}
+
+
 void loop()
 {
     // if (HAL_GetTick() - timeStart >= 10000)
     // {
     //     // laser80_stopMeasurement(0x80);
     // }
+
+    //----------------------------- По факту обмена данными с верхним уровнем --------------------------------------
+#ifdef SPI_protocol
+    if (flag_data) // Если обменялись данными
+    {
+        flag_data = false;
+        timeSpi = millis(); // Запоминаем время обмена
+        // printf("+\n");
+        processingDataReceive(); // Обработка пришедших данных после состоявшегося обмена  !!! Подумать почему меняю данные даже если они с ошибкой, потом по факту когда будет все работать
+        // printf(" mode= %i \n",Data2Modul_receive.controlMotor.mode);
+        executeDataReceive(); // Выполнение пришедших команд
+
+        // printf(" Receive id= %i cheksum= %i command= %i ", Data2Modul_receive.id, Data2Modul_receive.cheksum,Data2Modul_receive.command );
+        // printf(" All= %i bed= %i ", spi.all, spi.bed);
+        // printf(" angle0= %.2f angle1= %.2f angle2= %.2f angle3= %.2f", Data2Modul_receive.angle[0], Data2Modul_receive.angle[1], Data2Modul_receive.angle[2], Data2Modul_receive.angle[3] );
+
+        collect_Data_for_Send(); // Собираем данные в структуре для отправки на момент прихода команлы, но БЕЗ учета команды.До исполнения команды.
+        spi_slave_queue_Send(); // Закладываем данные в буфер для передачи(обмена)
+    }
+#endif
+
     if (dataUART1.flag == 1)
     {
         dataUART1.flag = 0;
