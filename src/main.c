@@ -12,6 +12,7 @@ uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема 
 #include "main.h"
 #include "dma.h"
 #include "usart.h"
+#include "spi.h"
 
 #include "config.h"
 #include "tim.h"
@@ -40,10 +41,13 @@ int main(void)
   MX_TIM7_Init();
 
   MX_DMA_Init();
+  
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART4_UART_Init();
+  
+  MX_SPI1_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
@@ -106,6 +110,7 @@ int main(void)
 
   // Непрерывное измерение
   laser80_continuousMeasurement(huart1,0x80); // Данные пойдут только через 500 милисекунд
+  
   laser80_continuousMeasurement(huart2,0x80); // Данные пойдут только через 500 милисекунд
   laser80_continuousMeasurement(huart3,0x80); // Данные пойдут только через 500 милисекунд
   laser80_continuousMeasurement(huart4,0x80); // Данные пойдут только через 500 милисекунд
