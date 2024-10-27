@@ -21,8 +21,12 @@ uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема 
 #include "code.h"
 #include "motor.h"
 #include "laser80M.h"
+#include "slaveSPI.h"
 
 void SystemClock_Config(void);
+
+volatile uint32_t millisCounter = 0;
+
 
 int main(void)
 {
@@ -41,12 +45,12 @@ int main(void)
   MX_TIM7_Init();
 
   MX_DMA_Init();
-  
+
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART4_UART_Init();
-  
+
   MX_SPI1_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
@@ -93,27 +97,27 @@ int main(void)
   laser80_setFrequency(huart4, 3);
 
   // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
-  HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
-  HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
-  HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
-  HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
+  HAL_UART_DMAStop(&huart1); // Остановка DMA
+  HAL_UART_DMAStop(&huart2); // Остановка DMA
+  HAL_UART_DMAStop(&huart3); // Остановка DMA
+  HAL_UART_DMAStop(&huart4); // Остановка DMA
 
-  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE);                             // Очистка буфера
-  memset(rx_bufferUART2, 0, RX_BUFFER_SIZE);                             // Очистка буфера
-  memset(rx_bufferUART3, 0, RX_BUFFER_SIZE);                             // Очистка буфера
-  memset(rx_bufferUART4, 0, RX_BUFFER_SIZE);                             // Очистка буфера
-  
+  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
+  memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
+  memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
+  memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
+
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
   HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
   HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
   HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
 
   // Непрерывное измерение
-  laser80_continuousMeasurement(huart1,0x80); // Данные пойдут только через 500 милисекунд
-  
-  laser80_continuousMeasurement(huart2,0x80); // Данные пойдут только через 500 милисекунд
-  laser80_continuousMeasurement(huart3,0x80); // Данные пойдут только через 500 милисекунд
-  laser80_continuousMeasurement(huart4,0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
+
+  laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
+  laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
 
   // HAL_Delay(5000);
   // laser80_stopMeasurement(huart1,0x80);
@@ -124,6 +128,10 @@ int main(void)
   // float aaa = 3.1415255;
   // uint8_t MSG[35] = {'\0'};
   // uint8_t X = 0;
+
+  initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
+  // // Запуск обмена данными по SPI с использованием DMA
+  // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
 
   while (1)
   {
@@ -194,12 +202,21 @@ int __io_putchar(int ch)
   return ch;
 }
 
+// Обработчик ошибок
 void Error_Handler(void)
 {
   __disable_irq();
   while (1)
   {
+    // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    // HAL_Delay(100);
   }
+}
+
+// Переопределяем обработчик SysTick, чтобы увеличивать счётчик миллисекунд
+void HAL_SYSTICK_Callback(void)
+{
+  millisCounter++; // Увеличиваем счетчик миллисекунд
 }
 
 #ifdef USE_FULL_ASSERT
