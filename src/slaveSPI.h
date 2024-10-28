@@ -67,6 +67,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
         // {
         //     Error_Handler(); // Обработка ошибки при повторном запуске
         // }
+        
     }
 }
 
