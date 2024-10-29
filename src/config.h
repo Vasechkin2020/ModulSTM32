@@ -109,7 +109,7 @@ struct Struct_Data2Modul
 
 struct Struct_Data2Modul Data2Modul_receive; // Экземпляр структуры получаемых данных
 
-//const int size_structura_receive = sizeof(Data2Modul_receive); // Размер структуры с данными которые получаем
+//const int size_structura_receive1 = sizeof(Data2Modul_receive); // Размер структуры с данными которые получаем
 
 //*********************************************************************
 // Структура по состоянию лидаров которая передается на верхний уровень
@@ -153,7 +153,7 @@ struct Struct_Modul2Data
 };
 
 struct Struct_Modul2Data Modul2Data_send;                                                                                             // Тут все переменные его характеризующие на низком уровне
-// const int size_structura_send = sizeof(Modul2Data_send);                                                                       // Размер структуры с данными которые передаем
+//const int size_structura_send2 = sizeof(Modul2Data_send);                                                                       // Размер структуры с данными которые передаем
 //const uint16_t max_size_stuct = (size_structura_receive < size_structura_send) ? size_structura_send : size_structura_receive; // Какая из структур больше
 
 #endif

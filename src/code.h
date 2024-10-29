@@ -236,27 +236,27 @@ void collect_Data_for_Send()
 // Отработка пришедших команд. Изменение скорости, траектории и прочее
 void executeDataReceive()
 {
-  static int mode_pred = 0; // Переменная для запоминания предыдущей команды
-  // Команда УПРАВЛЕНИЯ УГЛАМИ
-  if (Data2Modul_receive.controlMotor.mode == 0) // Если пришла команда 0 Управления
-  {
-    // Ничего не делаем
-  }
-  if (Data2Modul_receive.controlMotor.mode == 1) // Если пришла команда 1 Управления
-  {
-    for (int i = 0; i < 4; i++)
+    static int mode_pred = 0; // Переменная для запоминания предыдущей команды
+    // Команда УПРАВЛЕНИЯ УГЛАМИ
+    if (Data2Modul_receive.controlMotor.mode == 0) // Если пришла команда 0 Управления
     {
-      //setMotorAngle(i, Data2Modul_receive.controlMotor.angle[i]);
+        // Ничего не делаем
     }
-  }
-  // Команда КОЛИБРОВКИ И УСТАНОВКИ В 0
-  if (Data2Modul_receive.controlMotor.mode == 9 && Data2Modul_receive.controlMotor.mode != mode_pred) // Если пришла команда 9 Колибровки и предыдущая была другая
-  {
-    //setZeroMotor(); // Установка в ноль
-  }
+    if (Data2Modul_receive.controlMotor.mode == 1) // Если пришла команда 1 Управления
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            // setMotorAngle(i, Data2Modul_receive.controlMotor.angle[i]);
+        }
+    }
+    // Команда КОЛИБРОВКИ И УСТАНОВКИ В 0
+    if (Data2Modul_receive.controlMotor.mode == 9 && Data2Modul_receive.controlMotor.mode != mode_pred) // Если пришла команда 9 Колибровки и предыдущая была другая
+    {
+        // setZeroMotor(); // Установка в ноль
+    }
 
-  mode_pred = Data2Modul_receive.controlMotor.mode; // Запоминаяем команду
-  //     // printf(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
+    mode_pred = Data2Modul_receive.controlMotor.mode; // Запоминаяем команду
+                                                      //     // printf(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
 }
 
 
@@ -271,19 +271,23 @@ void loop()
 #ifdef SPI_protocol
     if (flag_data) // Если обменялись данными
     {
+
         flag_data = false;
         timeSpi = millis(); // Запоминаем время обмена
+        // printf ("In = %#x %#x %#x %#x \r\n",rxBuffer[0],rxBuffer[1],rxBuffer[2],rxBuffer[3]);
+        // printf ("Out = %#x %#x %#x %#x \r\n",txBuffer[0],txBuffer[1],txBuffer[2],txBuffer[3]);
         // printf("+\n");
         processingDataReceive(); // Обработка пришедших данных после состоявшегося обмена  !!! Подумать почему меняю данные даже если они с ошибкой, потом по факту когда будет все работать
         // printf(" mode= %i \n",Data2Modul_receive.controlMotor.mode);
-        executeDataReceive(); // Выполнение пришедших команд
+        // executeDataReceive(); // Выполнение пришедших команд
 
         // printf(" Receive id= %i cheksum= %i command= %i ", Data2Modul_receive.id, Data2Modul_receive.cheksum,Data2Modul_receive.command );
         // printf(" All= %i bed= %i ", spi.all, spi.bed);
         // printf(" angle0= %.2f angle1= %.2f angle2= %.2f angle3= %.2f", Data2Modul_receive.angle[0], Data2Modul_receive.angle[1], Data2Modul_receive.angle[2], Data2Modul_receive.angle[3] );
 
         collect_Data_for_Send(); // Собираем данные в структуре для отправки на момент прихода команлы, но БЕЗ учета команды.До исполнения команды.
-        spi_slave_queue_Send(); // Закладываем данные в буфер для передачи(обмена)
+        spi_slave_queue_Send();  // Закладываем данные в буфер для передачи(обмена)
+        //HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Запуск обмена данными по SPI с использованием DMA
     }
 #endif
 
@@ -317,7 +321,6 @@ void loop()
     if (flagContinius == 1)
     {
         flagContinius = 0;
-        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
     }
 
     // HAL_Delay(); // Пауза 500 миллисекунд.
@@ -325,7 +328,6 @@ void loop()
     if (flag_timer_10millisec)
     {
         flag_timer_10millisec = false;
-        HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
         // HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);             // Инвертирование состояния выхода.
         // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
     }
@@ -342,6 +344,7 @@ void loop()
     if (flag_timer_1sec) // Вызывается каждую секунду
     {
         HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin); // Инвертирование состояния выхода.
+        printf ("aaaa\r\n");
         // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
         //  uint8_t UART1_rxBuffer[4] = {0xAA,0xFF,0xAA,0xFF};
         //   uint8_t UART1_rxBuffer[1] = {0x56}; //Запрос версии "V"

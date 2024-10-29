@@ -66,58 +66,57 @@ int main(void)
   HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
   HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
 
-  laser80_setAddress(huart1, 0x80);
-  laser80_setAddress(huart2, 0x80);
-  laser80_setAddress(huart3, 0x80);
-  laser80_setAddress(huart4, 0x80);
-  HAL_Delay(100);
-  laser80_stopMeasurement(huart1, 0x80);
-  laser80_stopMeasurement(huart2, 0x80);
-  laser80_stopMeasurement(huart3, 0x80);
-  laser80_stopMeasurement(huart4, 0x80);
-  HAL_Delay(100);
-  laser80_controlLaser(huart1, 1, 0x80);
-  laser80_controlLaser(huart2, 1, 0x80);
-  laser80_controlLaser(huart3, 1, 0x80);
-  laser80_controlLaser(huart4, 1, 0x80);
-  HAL_Delay(2000);
-  laser80_controlLaser(huart1, 0, 0x80);
-  laser80_controlLaser(huart2, 0, 0x80);
-  laser80_controlLaser(huart3, 0, 0x80);
-  laser80_controlLaser(huart4, 0, 0x80);
-  HAL_Delay(100);
+  // laser80_setAddress(huart1, 0x80);
+  // laser80_setAddress(huart2, 0x80);
+  // laser80_setAddress(huart3, 0x80);
+  // laser80_setAddress(huart4, 0x80);
+  // HAL_Delay(100);
+  // laser80_stopMeasurement(huart1, 0x80);
+  // laser80_stopMeasurement(huart2, 0x80);
+  // laser80_stopMeasurement(huart3, 0x80);
+  // laser80_stopMeasurement(huart4, 0x80);
+  // HAL_Delay(100);
+  // laser80_controlLaser(huart1, 1, 0x80);
+  // laser80_controlLaser(huart2, 1, 0x80);
+  // laser80_controlLaser(huart3, 1, 0x80);
+  // laser80_controlLaser(huart4, 1, 0x80);
+  // HAL_Delay(2000);
+  // laser80_controlLaser(huart1, 0, 0x80);
+  // laser80_controlLaser(huart2, 0, 0x80);
+  // laser80_controlLaser(huart3, 0, 0x80);
+  // laser80_controlLaser(huart4, 0, 0x80);
+  // HAL_Delay(100);
 
   // laser80_setTimeInterval(huart1,0);
   // laser80_setResolution(huart1,1);
   // laser80_setRange(huart1,30);
   // laser80_setStartingPoint(huart1,1);
-  laser80_setFrequency(huart1, 3);
-  laser80_setFrequency(huart2, 3);
-  laser80_setFrequency(huart3, 3);
-  laser80_setFrequency(huart4, 3);
+  // laser80_setFrequency(huart1, 3);
+  // laser80_setFrequency(huart2, 3);
+  // laser80_setFrequency(huart3, 3);
+  // laser80_setFrequency(huart4, 3);
 
   // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
-  HAL_UART_DMAStop(&huart1); // Остановка DMA
-  HAL_UART_DMAStop(&huart2); // Остановка DMA
-  HAL_UART_DMAStop(&huart3); // Остановка DMA
-  HAL_UART_DMAStop(&huart4); // Остановка DMA
+  // HAL_UART_DMAStop(&huart1); // Остановка DMA
+  // HAL_UART_DMAStop(&huart2); // Остановка DMA
+  // HAL_UART_DMAStop(&huart3); // Остановка DMA
+  // HAL_UART_DMAStop(&huart4); // Остановка DMA
 
-  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
-  memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
-  memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
-  memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
+  // memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
+  // memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
+  // memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
+  // memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
 
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  // HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  // HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
 
   // Непрерывное измерение
-  laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
-
-  laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
-  laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
-  laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
 
   // HAL_Delay(5000);
   // laser80_stopMeasurement(huart1,0x80);
@@ -129,9 +128,9 @@ int main(void)
   // uint8_t MSG[35] = {'\0'};
   // uint8_t X = 0;
 
-  initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
+  //initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
   // // Запуск обмена данными по SPI с использованием DMA
-  // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
+  HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
 
   while (1)
   {
