@@ -79,30 +79,43 @@ void initMotor()
     // Установка пина разрешающего работу драйвероы 0- Разрешена работа 1- запрещена работа драйвера
     HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
 
-    motor[0].step_port = 3; // Port C Step_Motor0_GPIO_Port;
+    motor[0].step_port = Step_Motor0_GPIO_Port;
     motor[0].step_pin = Step_Motor0_Pin;
-    motor[0].dir_port = 3; // Dir_Motor0_GPIO_Port;
+    motor[0].dir_port = Dir_Motor0_GPIO_Port;
     motor[0].dir_pin = Dir_Motor0_Pin;
 
-    motor[1].step_port = 2; // Port B Step_Motor1_GPIO_Port;
+    motor[0].micric_pin = micMotor0_Pin;
+    motor[0].micric_port = micMotor0_GPIO_Port;
+    //----
+    motor[1].step_port = Step_Motor1_GPIO_Port;
     motor[1].step_pin = Step_Motor1_Pin;
-    motor[1].dir_port = 2; // Dir_Motor1_GPIO_Port;
+    motor[1].dir_port = Dir_Motor1_GPIO_Port;
     motor[1].dir_pin = Dir_Motor1_Pin;
 
-    motor[2].step_port = 2; // Step_Motor2_GPIO_Port;
+    motor[1].micric_pin = micMotor1_Pin;
+    motor[1].micric_port = micMotor1_GPIO_Port;
+
+    motor[2].step_port = Step_Motor2_GPIO_Port;
     motor[2].step_pin = Step_Motor2_Pin;
-    motor[2].dir_port = 2; // Dir_Motor2_GPIO_Port;
+    motor[2].dir_port = Dir_Motor2_GPIO_Port;
     motor[2].dir_pin = Dir_Motor2_Pin;
 
-    motor[3].step_port = 2; // Step_Motor3_GPIO_Port;
+    motor[2].micric_pin = micMotor2_Pin;
+    motor[2].micric_port = micMotor2_GPIO_Port;
+
+    motor[3].step_port = Step_Motor3_GPIO_Port;
     motor[3].step_pin = Step_Motor3_Pin;
-    motor[3].dir_port = 2; // Dir_Motor3_GPIO_Port;
+    motor[3].dir_port = Dir_Motor3_GPIO_Port;
     motor[3].dir_pin = Dir_Motor3_Pin;
+
+    motor[3].micric_pin = micMotor3_Pin;
+    motor[3].micric_port = micMotor3_GPIO_Port;
 
     motor[0].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[1].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[2].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[3].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
+
     HAL_Delay(100);
 }
 
@@ -129,16 +142,7 @@ void timer7() // Обработчик прерывания таймера TIM7
             }
             else
             {
-                if (motor[i].step_port == 1)
-                    myPort = GPIOA;
-                if (motor[i].step_port == 2)
-                    myPort = GPIOB;
-                if (motor[i].step_port == 3)
-                    myPort = GPIOC;
-
-                // digitalWrite(motor[i].step_pin, 1);                              // Если флаг вращения моторов включен тогда делаем импульс
-                HAL_GPIO_WritePin(myPort, motor[i].step_pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-
+                HAL_GPIO_WritePin(motor[i].step_port, motor[i].step_pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
                 (motor[i].dir == 1) ? motor[i].position++ : motor[i].position--; // Если считаем шаги
             }
         }
@@ -148,15 +152,7 @@ void timer7() // Обработчик прерывания таймера TIM7
 
     for (int i = 0; i < 4; i++)
     {
-        if (motor[i].step_port == 1)
-            myPort = GPIOA;
-        if (motor[i].step_port == 2)
-            myPort = GPIOB;
-        if (motor[i].step_port == 3)
-            myPort = GPIOC;
-
-        // digitalWrite(motor[i].step_pin, 0); // Отключаем импульс, делаем всегда на всех пинах без проверки включали ли его
-        HAL_GPIO_WritePin(myPort, motor[i].step_pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+        HAL_GPIO_WritePin(motor[i].step_port, motor[i].step_pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     }
 
     // timerAlarmWrite(timer1, timeingStep, true); // Какой таймер, до скольки считаем , сбрасываем ли счетчик при срабатывании. Значение посчитали когда скороcть вращения расчитывали
@@ -167,7 +163,7 @@ void timer7() // Обработчик прерывания таймера TIM7
 void testMotorRun()
 {
     setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
-    
+
     HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     // digitalWrite(PIN_Motor_En, 0); // Включаем драйвера
     statusTestMotor = 1; // Статус теста мотора Включаем что тест
@@ -236,23 +232,16 @@ void setMotorAngle(int num, float _angle)
     printf("pos= %i ", motor[num].position);
     printf("dest= %i \n", motor[num].destination);
 
-    if (motor[num].step_port == 1)
-        myPort = GPIOA;
-    if (motor[num].step_port == 2)
-        myPort = GPIOB;
-    if (motor[num].step_port == 3)
-        myPort = GPIOC;
-
     if (motor[num].position < motor[num].destination) // Если цель бпльше то вращение по часовой 1
     {
         // digitalWrite(motor[num].dir_pin, 1);
-        HAL_GPIO_WritePin(myPort, motor[num].dir_pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+        HAL_GPIO_WritePin(motor[num].dir_port, motor[num].dir_pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
         motor[num].dir = 1;
     }
     if (motor[num].position > motor[num].destination) // Если цель меньше то вращение против часовой 0
     {
         // digitalWrite(motor[num].dir_pin, 0);
-        HAL_GPIO_WritePin(myPort, motor[num].dir_pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+        HAL_GPIO_WritePin(motor[num].dir_port, motor[num].dir_pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
         motor[num].dir = 0;
     }
     // printf("dir_pin motor %i = %i \n", num, motor[num].dir_pin);
@@ -286,13 +275,14 @@ void isrMicMotor3()
 // Функция установки в ноль всех моторов
 void setZeroMotor()
 {
+    HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     setSpeedMotor(0.5); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
     // Serial.println(String(micros()) + " Start setZeroMotor ...");
     for (int i = 0; i < 4; i++) // Сначала отводим немного на случай если уже в нуле
     {
         setMotorAngle(i, 15);
     }
-    HAL_Delay(500);
+    HAL_Delay(1000);
     setSpeedMotor(0.2); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
     for (int i = 0; i < 4; i++)
     {

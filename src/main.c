@@ -159,11 +159,12 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
-int __io_putchar(int ch)
-{
-  HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
-  return ch;
-}
+// Перенаправление вывода команды printf на UART
+// int __io_putchar(int ch)
+// {
+//   HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
+//   return ch;
+// }
 
 // Обработчик ошибок
 void Error_Handler(void)

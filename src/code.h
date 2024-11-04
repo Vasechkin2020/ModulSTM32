@@ -110,7 +110,7 @@ struct dataUART
     uint8_t status; // Номер UART
     float angle;    // Угол в котором находился мотор в момент когда пришли данные по измерению
     float distance; // Дистанция по последнему хорошему измерению
-    uint8_t *adr;  // Адрес буфера
+    uint8_t *adr;   // Адрес буфера
 };
 
 struct dataUART dataUART[4];
@@ -210,12 +210,10 @@ void collect_Data_for_Send()
 
     for (int i = 0; i < 4; i++) // Информация по моторам всегда
     {
-        // Modul2Data_send.motor[i].status = motor[i].status; // Считываем состояние пина драйверов
-        // Modul2Data_send.motor[i].position = tfLocalToGlobal360(getAngle(motor[i].position), i);       // Записываем текущую позицию преобразуя из импульсов в градусы, надо еще в глобальную систему преобразовывать
-        // Modul2Data_send.motor[i].destination = tfLocalToGlobal360(getAngle(motor[i].destination), i); // Считываем цель по позиции, надо еще в глобальную систему преобразовывать
-        // Modul2Data_send.motor[i].position = getAngle(motor[i].position);       // Записываем текущую позицию преобразуя из импульсов в градусы, надо еще в глобальную систему преобразовывать
-        // Modul2Data_send.motor[i].destination = getAngle(motor[i].destination); // Считываем цель по позиции, надо еще в глобальную систему преобразовывать
-        // Modul2Data_send.micric[i] = digitalRead(motor[i].micric_pin);          //
+        Modul2Data_send.motor[i].status = motor[i].status;                                       // Считываем состояние пина драйверов
+        Modul2Data_send.motor[i].position = getAngle(motor[i].position);                         // Записываем текущую позицию преобразуя из импульсов в градусы, надо еще в глобальную систему преобразовывать
+        Modul2Data_send.motor[i].destination = getAngle(motor[i].destination);                   // Считываем цель по позиции, надо еще в глобальную систему преобразовывать
+        Modul2Data_send.micric[i] = HAL_GPIO_ReadPin(motor[i].micric_port, motor[i].micric_pin); //
     }
 
     for (int i = 0; i < 4; i++) // Информация по лазерам по ситуации
@@ -279,7 +277,7 @@ void executeDataReceive()
         setZeroMotor(); // Установка в ноль
     }
     // Команда ВКЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
-    if (Data2Modul_receive.controlLaser.mode == 1 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда 9 Колибровки и предыдущая была другая
+    if (Data2Modul_receive.controlLaser.mode == 1 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
         // Непрерывное измерение
         laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
@@ -288,7 +286,7 @@ void executeDataReceive()
         laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
     }
     // Команда ВЫЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
-    if (Data2Modul_receive.controlLaser.mode == 0 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда 9 Колибровки и предыдущая была другая
+    if (Data2Modul_receive.controlLaser.mode == 0 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
         // Непрерывное измерение
         laser80_stopMeasurement(huart1, 0x80);
@@ -347,10 +345,10 @@ void laserInit()
     laser80_setStartingPoint(huart3, 1);
     laser80_setStartingPoint(huart4, 1);
     HAL_Delay(1000);
-    laser80_setFrequency(huart1, 3);
-    laser80_setFrequency(huart2, 3);
-    laser80_setFrequency(huart3, 3);
-    laser80_setFrequency(huart4, 3);
+    laser80_setFrequency(huart1, 10);
+    laser80_setFrequency(huart2, 10);
+    laser80_setFrequency(huart3, 10);
+    laser80_setFrequency(huart4, 10);
     HAL_Delay(1000);
 
     // Непрерывное измерение
@@ -369,10 +367,14 @@ void loop()
     // {
     //     // laser80_stopMeasurement(0x80);
     // }
-    if (millis() - timeSpi > 5000) // Если обмена нет больше 5 секунд то отключаем все
+    if (millis() - timeSpi > 3000) // Если обмена нет больше 5 секунд то отключаем все
     {
         Data2Modul_receive.controlLaser.mode = 0;                          // Отключаем лазерные датчики
         Data2Modul_receive.controlMotor.mode = 0;                          // Отключаем моторы
+        laser80_stopMeasurement(huart1,0x80);
+        laser80_stopMeasurement(huart2,0x80);
+        laser80_stopMeasurement(huart3,0x80);
+        laser80_stopMeasurement(huart4,0x80);
         HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     }
     //----------------------------- По факту обмена данными с верхним уровнем --------------------------------------
@@ -400,30 +402,30 @@ void loop()
     }
 #endif
 
-for (int i = 0; i < 4; i++)
-{
-    if (dataUART[i].flag == 1)
+    for (int i = 0; i < 4; i++)
     {
-        dataUART[i].flag = 0;
-        printf("%li Len%i = %i status= %i   /   ", millis(), dataUART[i].num,  dataUART[i].len, dataUART[i].status);
-        for (int i = 0; i < dataUART[i].len; i++)
+        if (dataUART[i].flag == 1)
         {
-            // printf("%x ", rx_bufferUART1[i]);
+            dataUART[i].flag = 0;
+            // printf("%li Len%i = %i status= %i   /   ", millis(), dataUART[i].num,  dataUART[i].len, dataUART[i].status);
+            for (int i = 0; i < dataUART[i].len; i++)
+            {
+                // printf("%x ", rx_bufferUART1[i]);
+            }
+            // printf("\r\n");
+            float dist = calcDistance(dataUART[i].adr, dataUART[i].len);
+            if (dist != 0) // Расчитываем дистанцию. Возвращаем значение или 0 если ошибка
+            {
+                // printf(" UART%i = %.3f \r\n", dataUART[i].num, dist);
+                dataUART[i].distance = dist;
+            }
+            else
+            {
+                printf("Error dataUART%i. \r\n", dataUART[i].num);
+            }
+            memset(dataUART[i].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
         }
-        // printf("\r\n");
-        float dist = calcDistance(dataUART[i].adr, dataUART[i].len);
-        if (dist != 0) // Расчитываем дистанцию. Возвращаем значение или 0 если ошибка
-        {
-            printf(" UART%i = %.3f \r\n", dataUART[i].num, dist);
-            dataUART[i].distance = dist;
-        }
-        else
-        {
-            printf("Error dataUART%i. \r\n", dataUART[i].num);
-        }
-        memset(dataUART[i].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
     }
-}
 
     // if (dataUART[0].flag == 1)
     // {
