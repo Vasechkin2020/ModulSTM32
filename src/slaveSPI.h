@@ -107,14 +107,14 @@ void spi_slave_queue_Send()
 // Обработка по флагу в main пришедших данных после срабатывания прерывания что обмен состоялся
 void processingDataReceive()
 {
-    struct STest
-    {
-        uint8_t byte0;
-        uint8_t byte1;
-        uint8_t byte2;
-        uint8_t byte3;
-        float fff;
-    };
+    // struct STest
+    // {
+    //     uint8_t byte0;
+    //     uint8_t byte1;
+    //     uint8_t byte2;
+    //     uint8_t byte3;
+    //     float fff;
+    // };
 
     // struct STest StructTestPSpi;
 

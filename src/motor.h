@@ -9,7 +9,7 @@
 #include "config.h"
 
 //---------------------------------------------------------------------------------------
-#define SPEED 1.0     // Скорость на всех моторах одинаковая максимально возможная, что-бы перемещаться как можно быстрее оборотов за секунду rps
+#define SPEED 0.50    // Скорость на всех моторах одинаковая максимально возможная, что-бы перемещаться как можно быстрее оборотов за секунду rps. Точность - одня десятая
 #define MICROSTEP 16  // Микрошаг на драйверах
 #define REDUKTOR 1    // Параметры Редуктора 1 - Нет редуктора
 #define STEPMOTOR 0.9 // Параметры градусы на шаг
@@ -58,13 +58,13 @@ void setSpeedMotor(float _speed)
 
     // Скорость в оборотах их умножаем на градусы и делим на градус на 1 шаг получаем нужное число полных шагов для такой скорости за секунду
     // Умножаем на передаточное число редуктора и микрошаг
-    float step_za_sec = abs(_speed) * (360 / STEPMOTOR) * REDUKTOR * MICROSTEP;
+    float step_za_sec = abs(_speed * 10) / 10.0 * (360.0 / STEPMOTOR) * REDUKTOR * MICROSTEP;
     // printf("step_za_sec= %f \n", (float)step_za_sec);
 
     // Микросекунды в секунде делим на число шагов которые надо успеть сделать за секунду и делим на микрошаги делим на микросекунды за 1 шаг с учетом предделителя таймера
     timeingStep = (float)1000000 / step_za_sec; // Таймер по 1 микросекунде
     Set_Timer7_Period(timeingStep);             //  Устаналиваем время на таймере
-    // printf("timeingStep= %i microsecond \n", timeingStep);
+    printf("timeingStep= %i microsecond \n", timeingStep);
     //  delay(100);
     HAL_Delay(100); // Пауза 100 миллисекунд.
 }
@@ -103,6 +103,7 @@ void initMotor()
     motor[1].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[2].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[3].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
+    HAL_Delay(100);
 }
 
 // Функция для изменения периода таймера TIM7
@@ -158,13 +159,15 @@ void timer7() // Обработчик прерывания таймера TIM7
         HAL_GPIO_WritePin(myPort, motor[i].step_pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     }
 
-    // timerAlarmWrite(timer1, timeingStep, true); // Какой таймер, до скольки считаем , сбрасываем ли счетчик при срабатывании. Значение посчитали когда скороть вращения расчитывали
+    // timerAlarmWrite(timer1, timeingStep, true); // Какой таймер, до скольки считаем , сбрасываем ли счетчик при срабатывании. Значение посчитали когда скороcть вращения расчитывали
     //  digitalWrite(2, 0);
 }
 
 // Запуск моторов на тест
 void testMotorRun()
 {
+    setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
+    
     HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     // digitalWrite(PIN_Motor_En, 0); // Включаем драйвера
     statusTestMotor = 1; // Статус теста мотора Включаем что тест
@@ -173,9 +176,9 @@ void testMotorRun()
     motor[1].status = 1;
     motor[2].status = 1;
     motor[3].status = 1;
-    // Serial.println("testMotorRun...");
-    while (1)
-        ;
+    printf("testMotorRun...\r\n");
+    // while (1)
+    //     ;
 }
 
 // Остановка моторов после теста

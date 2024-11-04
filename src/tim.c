@@ -8,6 +8,8 @@ extern void isrMicMotor0();
 extern void isrMicMotor1();
 extern void isrMicMotor2();
 extern void isrMicMotor3();
+// extern uint32_t millis();
+extern volatile uint32_t millisCounter;
 
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
@@ -72,24 +74,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 // Callback-функция, которая вызывается при срабатывании прерывания По спаду уровня
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin == micMotor0_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+  // if (millisCounter > 50) // Если с момента запуска прошло более 500 милисекунд то реагируем на прерывания
+  if (1) // Если с момента запуска прошло более 500 милисекунд то реагируем на прерывания
   {
-    isrMicMotor0();
-    // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
-    // HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
-    // HAL_GPIO_WritePin(Led2_GPIO_Port, Led2_Pin, GPIO_PIN_RESET);
-  }
-  else if (GPIO_Pin == micMotor1_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
-  {
-    isrMicMotor1();
-  }
-  else if (GPIO_Pin == micMotor2_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
-  {
-    isrMicMotor2();
-  }
-  else if (GPIO_Pin == micMotor3_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
-  {
-    isrMicMotor2();
+    if (GPIO_Pin == micMotor0_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+    {
+      isrMicMotor0();
+      // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
+      // HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
+      // HAL_GPIO_WritePin(Led2_GPIO_Port, Led2_Pin, GPIO_PIN_RESET);
+    }
+    else if (GPIO_Pin == micMotor1_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+    {
+      isrMicMotor1();
+    }
+    else if (GPIO_Pin == micMotor2_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+    {
+      isrMicMotor2();
+    }
+    else if (GPIO_Pin == micMotor3_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
+    {
+      isrMicMotor3();
+    }
   }
 }
 // Callback-функция, которая вызывается при срабатывании прерывания По подьему уровня

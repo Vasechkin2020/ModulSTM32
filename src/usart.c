@@ -31,18 +31,21 @@ void MX_USART1_UART_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
+
+  // if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+  // if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+  // if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 /* USART2 init function */
@@ -63,18 +66,19 @@ void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart2, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart2, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  // if (HAL_UARTEx_SetTxFifoThreshold(&huart2, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+  // if (HAL_UARTEx_SetRxFifoThreshold(&huart2, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+  // if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+  __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 /* USART3 init function */
@@ -95,6 +99,7 @@ void MX_USART3_UART_Init(void)
   {
     Error_Handler();
   }
+  __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 /* USART4 init function */
@@ -115,6 +120,7 @@ void MX_USART4_UART_Init(void)
   {
     Error_Handler();
   }
+  __HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
@@ -208,7 +214,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     }
 
     __HAL_LINKDMA(uartHandle, hdmarx, hdma_usart2_rx);
-
   }
   else if (uartHandle->Instance == USART3)
   {
@@ -252,7 +257,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     }
 
     __HAL_LINKDMA(uartHandle, hdmarx, hdma_usart3_rx);
-
   }
   else if (uartHandle->Instance == USART4)
   {

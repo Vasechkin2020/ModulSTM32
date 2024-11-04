@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define RX_BUFFER_SIZE 64                     // Размер буфера приема
+#define RX_BUFFER_SIZE 32                     // Размер буфера приема
 uint8_t rx_bufferUART1[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 uint8_t rx_bufferUART2[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 uint8_t rx_bufferUART3[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
@@ -26,7 +26,6 @@ uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема 
 void SystemClock_Config(void);
 
 volatile uint32_t millisCounter = 0;
-
 
 int main(void)
 {
@@ -56,70 +55,36 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
-  // initMotor();          // Начальная инициализация и настройка шаговых моторов
-  // setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
-  // testMotorRun();
-  // setZeroMotor(); // Установка в ноль
-
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11); // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // Двнные оказываются в буфере rx_bufferUART1
 
-  // laser80_setAddress(huart1, 0x80);
-  // laser80_setAddress(huart2, 0x80);
-  // laser80_setAddress(huart3, 0x80);
-  // laser80_setAddress(huart4, 0x80);
-  // HAL_Delay(100);
-  // laser80_stopMeasurement(huart1, 0x80);
-  // laser80_stopMeasurement(huart2, 0x80);
-  // laser80_stopMeasurement(huart3, 0x80);
-  // laser80_stopMeasurement(huart4, 0x80);
-  // HAL_Delay(100);
-  // laser80_controlLaser(huart1, 1, 0x80);
-  // laser80_controlLaser(huart2, 1, 0x80);
-  // laser80_controlLaser(huart3, 1, 0x80);
-  // laser80_controlLaser(huart4, 1, 0x80);
-  // HAL_Delay(2000);
-  // laser80_controlLaser(huart1, 0, 0x80);
-  // laser80_controlLaser(huart2, 0, 0x80);
-  // laser80_controlLaser(huart3, 0, 0x80);
-  // laser80_controlLaser(huart4, 0, 0x80);
-  // HAL_Delay(100);
+  laserInit();                                                           // Инициализация лазеров
+               // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
+  HAL_UART_DMAStop(&huart1); // Остановка DMA
+  HAL_UART_DMAStop(&huart2); // Остановка DMA
+  HAL_UART_DMAStop(&huart3); // Остановка DMA
+  HAL_UART_DMAStop(&huart4); // Остановка DMA
 
-  // laser80_setTimeInterval(huart1,0);
-  // laser80_setResolution(huart1,1);
-  // laser80_setRange(huart1,30);
-  // laser80_setStartingPoint(huart1,1);
-  // laser80_setFrequency(huart1, 3);
-  // laser80_setFrequency(huart2, 3);
-  // laser80_setFrequency(huart3, 3);
-  // laser80_setFrequency(huart4, 3);
+  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
+  memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
+  memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
+  memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
 
-  // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
-  // HAL_UART_DMAStop(&huart1); // Остановка DMA
-  // HAL_UART_DMAStop(&huart2); // Остановка DMA
-  // HAL_UART_DMAStop(&huart3); // Остановка DMA
-  // HAL_UART_DMAStop(&huart4); // Остановка DMA
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+  HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
 
-  // memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
-  // memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
-  // memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
-  // memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
+  //  // Запуск обмена данными по SPI с использованием DMA
+  initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
+  // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
+  printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
-  // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  // HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  // HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-
-  // Непрерывное измерение
-  // laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
-  // laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
-  // laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
-  // laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
-
-  // HAL_Delay(5000);
-  // laser80_stopMeasurement(huart1,0x80);
+  initMotor(); // Начальная инициализация и настройка шаговых моторов
+  //  testMotorRun();
+  setZeroMotor(); // Установка в ноль
 
   // int a = 0;
   // int b = 2;
@@ -128,9 +93,8 @@ int main(void)
   // uint8_t MSG[35] = {'\0'};
   // uint8_t X = 0;
 
-  //initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
-  // // Запуск обмена данными по SPI с использованием DMA
-  HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
+  HAL_Delay(999);
+  timeSpi = millis(); // Запоминаем время начала цикла
 
   while (1)
   {
@@ -213,10 +177,22 @@ void Error_Handler(void)
 }
 
 // Переопределяем обработчик SysTick, чтобы увеличивать счётчик миллисекунд
-void HAL_SYSTICK_Callback(void)
-{
-  millisCounter++; // Увеличиваем счетчик миллисекунд
-}
+// void HAL_SYSTICK_Callback(void)
+// {
+//   millisCounter++; // Увеличиваем счетчик миллисекунд
+// }
+
+// #define SYSTICK_LOAD (SystemCoreClock / 1000000U)
+// #define SYSTICK_DELAY_CALIB (SYSTICK_LOAD >> 1)
+
+// #define DELAY_US(us)
+//   do
+//   {
+//     uint32_t start = SysTick->VAL;
+//     uint32_t ticks = (us * SYSTICK_LOAD) - SYSTICK_DELAY_CALIB;
+//     while ((start - SysTick->VAL) < ticks)
+//       ;
+//   } while (0)
 
 #ifdef USE_FULL_ASSERT
 /**
