@@ -72,7 +72,7 @@ enum statusCode
     Invalid_Frame = 0x0081,
 };
 // Массив строк для представления имен enum
-const char* ErrorNames[] = {
+const char *ErrorNames[] = {
     "No_error",
     "Power_input_too_low",
     "Internal_error",
@@ -90,8 +90,7 @@ const char* ErrorNames[] = {
     "Hardware_fault_5",
     "Laser_signal_not_stable",
     "Hardware_fault_6",
-    "Hardware_fault_7"
-};
+    "Hardware_fault_7"};
 
 void clearBuf();      // Очистка буфера приема
 bool readBuf();       // Буфер для чтения байт
@@ -111,7 +110,8 @@ uint16_t _offSet = 0;        // Поправочное смещение. Изн�
 void init(uint8_t addr_);
 uint8_t calcCs(uint8_t *data_, uint8_t len_);
 
-void sk60plus_autoBaund(); // Установка скорости обмена
+void laser60_Init();       // Начальная установка лазеров
+void sk60plus_autoBaund(UART_HandleTypeDef huart); // Установка скорости обмена
 
 void sk60plus_readHardwareVersion(UART_HandleTypeDef huart);                  // Function: master read out the module’s HW version number;
 void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart);                  // Function: master read out the module’s SW version number;
@@ -156,16 +156,37 @@ distance. Measure result for each slave will NOT overwrite until next successful
     7 0x01BE REG_CTRL_LD Laser diode control
 */
 
+void laser60_Init() // Начальная установка лазеров
+{
+    // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET);
+    // HAL_Delay(100);
+    // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET);
+    // HAL_Delay(100);
+    //sk60plus_setModulAddress(huart2, 0x00);
+    sk60plus_autoBaund(huart2);
+    HAL_Delay(300);
+
+    sk60plus_readHardwareVersion(huart1);
+    sk60plus_readHardwareVersion(huart2);
+    sk60plus_readHardwareVersion(huart3);
+    HAL_Delay(300);
+    sk60plus_readSoftwareVersion(huart2);
+    HAL_Delay(300);
+    sk60plus_readSerialNumber(huart2);
+    HAL_Delay(300000);
+}
+
+
 void sk60plus_init(uint8_t addr_)
 {
-    _addr = addr_; // Запоминаем адрес датчика при инициализации
-    setLaser(1);
-    readSerialNumber();
-    readHardwareVersion();
-    readSoftwareVersion();
-    readInputVoltage();
-    setLaser(0);
-    printf("--- \n");
+    // _addr = addr_; // Запоминаем адрес датчика при инициализации
+    // setLaser(1);
+    // readSerialNumber();
+    // readHardwareVersion();
+    // readSoftwareVersion();
+    // readInputVoltage();
+    // setLaser(0);
+    // printf("--- \n");
 }
 // void sk60plus_clearBuf()
 // {
@@ -192,19 +213,17 @@ uint8_t calcCs(uint8_t *data_, uint8_t len_) // Расчет контрольн�
     return sum;
 }
 
-
-
 void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t YY_) // Function: master set slave’s address, this address will not lost after module power off; Slave address set to 0xYY (!!!Beware: address only take bit[6:0], other bits will be ignored).
 {
     printf("setModulAddress ->");
-    clearBuf();
-    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x10, 0x00, 0x01, 0x00, YY_, 0x00};
-    buf[8] = calcCs(buf, 9);
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);    // Отправляем команду
 
+    uint8_t buf[9] = {0xAA, 0x7F, 0x00, 0x10, 0x00, 0x01, 0x00, YY_, 0x00};
+    buf[8] = calcCs(buf, 9);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);   // Отправляем команду
     HAL_Delay(100);
+
     if (_bufRead[0] == 0xAA && _bufRead[7] == YY_) // Если ответ правильный смотри что в ответе
     {
         printf("setModulAddress = %0#6X  \n", _bufRead[7]);
@@ -213,20 +232,19 @@ void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t YY_) // Function
     {
         printf("setModulAddress = ERROR !!! \n");
     }
-
 }
 
 void sk60plus_readHardwareVersion(UART_HandleTypeDef huart) // Function: master read out the module’s HW version number;
 {
     printf("readHardwareVersion -> ");
-    clearBuf();
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+
     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
     uint8_t buf[5] = {0xAA, addr, 0x00, 0x0A, 0x00};
     buf[4] = calcCs(buf, 5);
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
-    status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);    // Отправляем команду
-    HAL_Delay(25);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);   // Отправляем команду
+    HAL_Delay(100);
 
     if (_bufRead[0] == 0xAA) // Если в буфере правильный ответ
     {
@@ -245,9 +263,9 @@ void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart) // Function: master 
     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
     uint8_t buf[5] = {0xAA, addr, 0x00, 0x0C, 0x00};
     buf[4] = calcCs(buf, 5);
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);    // Отправляем команду
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);   // Отправляем команду
     HAL_Delay(25);
     if (_bufRead[0] == 0xAA) // Если в буфере правильный ответ
     {
@@ -266,9 +284,9 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart) // Function: master rea
     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
     uint8_t buf[5] = {0xAA, addr, 0x00, 0x0E, 0x00};
     buf[4] = calcCs(buf, 5);
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);    // Отправляем команду
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);   // Отправляем команду
     HAL_Delay(25);
     if (_bufRead[0] == 0xAA) // Если в буфере правильный ответ
     {
@@ -281,217 +299,203 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart) // Function: master rea
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-void sk60plus_autoBaund() // Установка скорости обмена
+void sk60plus_autoBaund(UART_HandleTypeDef huart) // Установка скорости обмена
 {
-    pinMode(pinPwrEn, OUTPUT); // Пин датчика PWREN
-    digitalWrite(pinPwrEn, 0);
-    delay(100);
-    digitalWrite(pinPwrEn, 1);
-    delay(101);
+    // pinMode(pinPwrEn, OUTPUT); // Пин датчика PWREN
+    // digitalWrite(pinPwrEn, 0);
+    HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 0);
+    HAL_Delay(100);
+    HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 1);
+    HAL_Delay(100);
+    uint8_t buf[1] = {0x55};
     for (int i = 0; i < 10; i++) // в течении 2 секунд посылкаем байт 0х55 для установки нужной скорости обмена
     {
-        Serial2.write(0x55);
-        delay(25);
-    }
-    clearBuf(); // Чистим буфер так как все датчики ответят в кучу мала.
-}
-// Метод считывания данных ответа в буфер общий для всех. Потом берем нужные байты. Если ответ короче то в конце FF будет
-bool sk60plus_readBuf()
-{
-    for (int i = 0; i < 13; i++)
-    {
-        _bufRead[i] = Serial2.read();
-        // if (_bufRead[i] != 0xFF)
-        // printf("%0#4X-", _bufRead[i]);
-    }
-    // printf("\n");
-    //  uint8_t addr = _addr | 0b10000000;                 // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
-    if (_bufRead[0] == 0xAA) // Если первый байт 0xAA  и ответ от нужного датчика
-    {
-        return true;
-    }
-    else
-    {
-        return false;
+        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);   // Отправляем команду
+        HAL_Delay(25);
     }
 }
+// // Метод считывания данных ответа в буфер общий для всех. Потом берем нужные байты. Если ответ короче то в конце FF будет
+// bool sk60plus_readBuf()
+// {
+//     for (int i = 0; i < 13; i++)
+//     {
+//         _bufRead[i] = Serial2.read();
+//         // if (_bufRead[i] != 0xFF)
+//         // printf("%0#4X-", _bufRead[i]);
+//     }
+//     // printf("\n");
+//     //  uint8_t addr = _addr | 0b10000000;                 // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
+//     if (_bufRead[0] == 0xAA) // Если первый байт 0xAA  и ответ от нужного датчика
+//     {
+//         return true;
+//     }
+//     else
+//     {
+//         return false;
+//     }
+// }
 
+// void sk60plus_readInputVoltage(UART_HandleTypeDef huart) // Function: master read out the module’s input voltage in mV with BCD encode;
+// {
+//     printf("readInputVoltage -> ");
+//     clearBuf();
+//     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
+//     uint8_t buf[5] = {0xAA, addr, 0x00, 0x06, 0x00};
+//     buf[4] = calcCs(buf, 5);
+//     Serial2.write(buf, 5);
+//     delay(25);
+//     if (readBuf())
+//     {
+//         uint16_t a1 = ((_bufRead[6] >> 4) * 1000);        // Сдвигаем и убтраем младшие биты и прибавляем 0x30 тем самы превращаем в число
+//         uint16_t a2 = ((_bufRead[6] & 0b00001111)) * 100; // Убираем старшие биты и прибавляет 0x30 тем самы превращаем в число
+//         uint16_t a3 = ((_bufRead[7] >> 4)) * 10;          // Сдвигаем и убтраем младшие биты и прибавляем 0x30 тем самы превращаем в число
+//         uint16_t a4 = ((_bufRead[7] & 0b00001111)) * 1;   // Убираем старшие биты и прибавляет 0x30 тем самы превращаем в число
+//         _inputVoltage = a1 + a2 + a3 + a4;
+//         printf("readInputVoltage = %i mV \n", _inputVoltage);
+//     }
+//     else
+//     {
+//         printf("readInputVoltage = ERROR !!! \n");
+//     }
+// }
 
+// void sk60plus_stopContinuous() // Function: Master transfer one uint8_t 0x58 (upper case character ‘X’) to stop continuous measure mode immediately
+// {
+//     Serial2.write(0x58); //
+//     printf("stopContinuous = %0#6X \n", 0x58);
+// }
 
+// void sk60plus_setLaser(UART_HandleTypeDef huart, uint8_t ZZ_) // Function: turn on or turn off laser beam, if 0xZZ = 0x01 laser on, 0xZZ = 0x00 laser off.
+// {
+//     printf("setLaser -> ");
+//     clearBuf();
+//     uint8_t buf[9] = {0xAA, _addr, 0x01, 0xBE, 0x00, 0x01, 0x00, ZZ_, 0x00};
+//     buf[8] = calcCs(buf, 9);
+//     Serial2.write(buf, 9);
+//     delay(50);
+//     if (readBuf()) // Если ответ правильный смотри что в ответе
+//     {
+//         printf("setLaser status = %0#6X  \n", _bufRead[7]);
+//     }
+//     else
+//     {
+//         printf("setLaser status = ERROR !!! \n");
+//     }
+// }
 
-void sk60plus_readInputVoltage(UART_HandleTypeDef huart) // Function: master read out the module’s input voltage in mV with BCD encode;
-{
-    printf("readInputVoltage -> ");
-    clearBuf();
-    uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
-    uint8_t buf[5] = {0xAA, addr, 0x00, 0x06, 0x00};
-    buf[4] = calcCs(buf, 5);
-    Serial2.write(buf, 5);
-    delay(25);
-    if (readBuf())
-    {
-        uint16_t a1 = ((_bufRead[6] >> 4) * 1000);        // Сдвигаем и убтраем младшие биты и прибавляем 0x30 тем самы превращаем в число
-        uint16_t a2 = ((_bufRead[6] & 0b00001111)) * 100; // Убираем старшие биты и прибавляет 0x30 тем самы превращаем в число
-        uint16_t a3 = ((_bufRead[7] >> 4)) * 10;          // Сдвигаем и убтраем младшие биты и прибавляем 0x30 тем самы превращаем в число
-        uint16_t a4 = ((_bufRead[7] & 0b00001111)) * 1;   // Убираем старшие биты и прибавляет 0x30 тем самы превращаем в число
-        _inputVoltage = a1 + a2 + a3 + a4;
-        printf("readInputVoltage = %i mV \n", _inputVoltage);
-    }
-    else
-    {
-        printf("readInputVoltage = ERROR !!! \n");
-    }
-}
+// void sk60plus_setModulMeasureOffset(int16_t ZZYY_) // Function: master set slave’s measure offset. For example, if the offset 0xZZYY = 0x7B(+123) , it means the final output of measure result will PLUS 123 millimeters , if the offset 0xZZYY = 0xFF85(-123), it means the final output of measure result will MINUS 123 millimeters
+// {
+//     printf("setModulMeasureOffset \n");
+//     clearBuf();
+//     uint8_t ZZ = ZZYY_ >> 8;
+//     uint8_t YY = ZZYY_ & 0b0000000011111111;
+//     uint8_t buf[9] = {0xAA, _addr, 0x00, 0x12, 0x00, 0x01, ZZ, YY, 0x00};
+//     buf[8] = calcCs(buf, 9);
+//     Serial2.write(buf, 9);
+//     delay(10);
+//     if (readBuf()) // Если ответ правильный смотри что в ответе
+//     {
+//         _offSet = (uint16_t)(_bufRead[7] | (_bufRead[6] << 8));
 
-void sk60plus_stopContinuous() // Function: Master transfer one uint8_t 0x58 (upper case character ‘X’) to stop continuous measure mode immediately
-{
-    Serial2.write(0x58); //
-    printf("stopContinuous = %0#6X \n", 0x58);
-}
+//         printf("setModulMeasureOffset = %0#6X \n", _offSet);
+//     }
+// }
 
-void sk60plus_setLaser(UART_HandleTypeDef huart, uint8_t ZZ_) // Function: turn on or turn off laser beam, if 0xZZ = 0x01 laser on, 0xZZ = 0x00 laser off.
-{
-    printf("setLaser -> ");
-    clearBuf();
-    uint8_t buf[9] = {0xAA, _addr, 0x01, 0xBE, 0x00, 0x01, 0x00, ZZ_, 0x00};
-    buf[8] = calcCs(buf, 9);
-    Serial2.write(buf, 9);
-    delay(50);
-    if (readBuf()) // Если ответ правильный смотри что в ответе
-    {
-        printf("setLaser status = %0#6X  \n", _bufRead[7]);
-    }
-    else
-    {
-        printf("setLaser status = ERROR !!! \n");
-    }
-}
+// void sk60plus_startSingleFast() // Function: Initiate slave to do 1-shot measure in fast mode.
+// {
+//     printf("startSingleFast \n");
+//     clearBuf();
+//     uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x02, 0x00};
+//     buf[8] = calcCs(buf, 9);
+//     Serial2.write(buf, 9);
+//     delay(200);
+//     if (readBuf())
+//     {
+//         _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
+//         _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
+//     }
+//     printf("startSingleFast distance = %i mm signalQuality= %i \n", _distance, _signalQuality);
+// }
 
+// void sk60plus_startContinuousFast() // Function: Initiate slave to do 1-shot measure in fast mode.
+// {
+//     printf("startContinuousFast \n");
+//     clearBuf();
+//     uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x06, 0x00};
+//     buf[8] = calcCs(buf, 9);
+//     Serial2.write(buf, 9);
+//     delay(200);
+//     if (readBuf())
+//     {
+//         _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
+//         _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
+//     }
+//     printf("startContinuousFast distance = %i mm signalQuality= %i \n", _distance, _signalQuality);
+// }
 
-
-void sk60plus_setModulMeasureOffset(int16_t ZZYY_) // Function: master set slave’s measure offset. For example, if the offset 0xZZYY = 0x7B(+123) , it means the final output of measure result will PLUS 123 millimeters , if the offset 0xZZYY = 0xFF85(-123), it means the final output of measure result will MINUS 123 millimeters
-{
-    printf("setModulMeasureOffset \n");
-    clearBuf();
-    uint8_t ZZ = ZZYY_ >> 8;
-    uint8_t YY = ZZYY_ & 0b0000000011111111;
-    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x12, 0x00, 0x01, ZZ, YY, 0x00};
-    buf[8] = calcCs(buf, 9);
-    Serial2.write(buf, 9);
-    delay(10);
-    if (readBuf()) // Если ответ правильный смотри что в ответе
-    {
-        _offSet = (uint16_t)(_bufRead[7] | (_bufRead[6] << 8));
-
-        printf("setModulMeasureOffset = %0#6X \n", _offSet);
-    }
-}
-
-void sk60plus_startSingleFast() // Function: Initiate slave to do 1-shot measure in fast mode.
-{
-    printf("startSingleFast \n");
-    clearBuf();
-    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x02, 0x00};
-    buf[8] = calcCs(buf, 9);
-    Serial2.write(buf, 9);
-    delay(200);
-    if (readBuf())
-    {
-        _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
-        _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
-    }
-    printf("startSingleFast distance = %i mm signalQuality= %i \n", _distance, _signalQuality);
-}
-
-void sk60plus_startContinuousFast() // Function: Initiate slave to do 1-shot measure in fast mode.
-{
-    printf("startContinuousFast \n");
-    clearBuf();
-    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x06, 0x00};
-    buf[8] = calcCs(buf, 9);
-    Serial2.write(buf, 9);
-    delay(200);
-    if (readBuf())
-    {
-        _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
-        _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
-    }
-    printf("startContinuousFast distance = %i mm signalQuality= %i \n", _distance, _signalQuality);
-}
-
-void sk60plus_startContinuousSuperFast() // Function: Initiate slave to do 1-shot measure in Superfast mode. ~35Hz
-{
-    printf("startContinuousSuperFast \n");
-    clearBuf();
-    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x07, 0x00};
-    buf[8] = calcCs(buf, 9);
-    Serial2.write(buf, 9);
-    delay(200);
-    if (readBuf())
-    {
-        _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
-        _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
-    }
-    printf("startContinuousSuperFast distance = %i mm signalQuality= %i \n", _distance, _signalQuality);
-}
-void sk60plus_getBroadcastSingleMeasure() // Function: Initiate all slave to do 1-shot measure in auto mode/
-{
-    // printf("startBroadcastSingleMeasure \n");
-    clearBuf();
-    uint8_t buf[9] = {0xAA, 0x7F, 0x00, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00};
-    buf[8] = calcCs(buf, 9);
-    Serial2.write(buf, 9);
-}
-void sk60plus_getStatus()
-{
-    // printf("getStatus \n");
-    clearBuf();
-    uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
-    uint8_t buf[5] = {0xAA, addr, 0x00, 0x00, 0x00};
-    buf[4] = calcCs(buf, 5);
-    Serial2.write(buf, 5);
-}
-bool sk60plus_readStatus()
-{
-    (readBuf()) ? _status = _bufRead[7] : _status = 0xFF;
-    // printf("readStatus=  %0#4X \n", _status);
-    if (_status == 0x00)
-        return true;
-    else
-        return false;
-}
-void sk60plus_getMeasureResult() // Function: master read out the distance measure result;
-{
-    // printf("getMeasureResult \n");
-    clearBuf();
-    uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
-    uint8_t buf[5] = {0xAA, addr, 0x00, 0x22, 0x00};
-    buf[4] = calcCs(buf, 5);
-    Serial2.write(buf, 5);
-}
-bool sk60plus_readMeasureResult() // Function: master read out the distance measure result;
-{
-    if (readBuf())
-    {
-        _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
-        _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
-        printf(" l= %i d= %i SQ= %i \n", _addr, _distance, _signalQuality);
-        return true;
-    }
-    else
-    {
-        printf("readMeasureResult ERROR \n");
-        return false;
-    }
-}
+// void sk60plus_startContinuousSuperFast() // Function: Initiate slave to do 1-shot measure in Superfast mode. ~35Hz
+// {
+//     printf("startContinuousSuperFast \n");
+//     clearBuf();
+//     uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x07, 0x00};
+//     buf[8] = calcCs(buf, 9);
+//     Serial2.write(buf, 9);
+//     delay(200);
+//     if (readBuf())
+//     {
+//         _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
+//         _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
+//     }
+//     printf("startContinuousSuperFast distance = %i mm signalQuality= %i \n", _distance, _signalQuality);
+// }
+// void sk60plus_getBroadcastSingleMeasure() // Function: Initiate all slave to do 1-shot measure in auto mode/
+// {
+//     // printf("startBroadcastSingleMeasure \n");
+//     clearBuf();
+//     uint8_t buf[9] = {0xAA, 0x7F, 0x00, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00};
+//     buf[8] = calcCs(buf, 9);
+//     Serial2.write(buf, 9);
+// }
+// void sk60plus_getStatus()
+// {
+//     // printf("getStatus \n");
+//     clearBuf();
+//     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
+//     uint8_t buf[5] = {0xAA, addr, 0x00, 0x00, 0x00};
+//     buf[4] = calcCs(buf, 5);
+//     Serial2.write(buf, 5);
+// }
+// bool sk60plus_readStatus()
+// {
+//     (readBuf()) ? _status = _bufRead[7] : _status = 0xFF;
+//     // printf("readStatus=  %0#4X \n", _status);
+//     if (_status == 0x00)
+//         return true;
+//     else
+//         return false;
+// }
+// void sk60plus_getMeasureResult() // Function: master read out the distance measure result;
+// {
+//     // printf("getMeasureResult \n");
+//     clearBuf();
+//     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
+//     uint8_t buf[5] = {0xAA, addr, 0x00, 0x22, 0x00};
+//     buf[4] = calcCs(buf, 5);
+//     Serial2.write(buf, 5);
+// }
+// bool sk60plus_readMeasureResult() // Function: master read out the distance measure result;
+// {
+//     if (readBuf())
+//     {
+//         _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
+//         _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
+//         printf(" l= %i d= %i SQ= %i \n", _addr, _distance, _signalQuality);
+//         return true;
+//     }
+//     else
+//     {
+//         printf("readMeasureResult ERROR \n");
+//         return false;
+//     }
+// }
 #endif

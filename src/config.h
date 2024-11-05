@@ -52,6 +52,9 @@
 #define micMotor3_GPIO_Port GPIOB
 #define micMotor3_EXTI_IRQn EXTI4_15_IRQn
 
+#define laserEn_Pin GPIO_PIN_9
+#define laserEn_GPIO_Port GPIOD
+
 
 
 enum codeOperation // коды операций запросов по UART
