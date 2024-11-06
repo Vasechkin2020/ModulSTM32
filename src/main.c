@@ -60,7 +60,7 @@ int main(void)
   HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // Двнные оказываются в буфере rx_bufferUART1
   HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // Двнные оказываются в буфере rx_bufferUART1
 
-  // laserInit();                                                           // Инициализация лазеров
+  laserInit();                                                           // Инициализация лазеров
                // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
   HAL_UART_DMAStop(&huart1); // Остановка DMA
   HAL_UART_DMAStop(&huart2); // Остановка DMA
