@@ -92,17 +92,34 @@ int main(void)
 
 #ifdef LASER60
 
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-  //HAL_UART_Receive_DMA(&huart1, rx_bufferUART2, 11);                     // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Двнные оказываются в буфере rx_bufferUART1
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ 
+  HAL_UART_DMAStop(&huart1); // Остановка DMA
+  HAL_UART_DMAStop(&huart2); // Остановка DMA
+  HAL_UART_DMAStop(&huart3); // Остановка DMA
+  HAL_UART_DMAStop(&huart4); // Остановка DMA
+  HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11);                     // Данные оказываются в буфере rx_bufferUART1
+  HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1
+  HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Данные оказываются в буфере rx_bufferUART1
+  HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Данные оказываются в буфере rx_bufferUART1
 
   // laser80_Init(); // Инициализация лазеров
   
   sk60plus_autoBaund();
   sk60plus_readSerialNumber(huart1);
   sk60plus_readSerialNumber(huart2);
+  sk60plus_readSerialNumber(huart3);
+
+  sk60plus_readSoftwareVersion(huart1);
+  sk60plus_readSoftwareVersion(huart2);
+  sk60plus_readSoftwareVersion(huart3);
+
+  sk60plus_readHardwareVersion(huart1);
+  sk60plus_readHardwareVersion(huart2);
+  sk60plus_readHardwareVersion(huart3);
+
+  sk60plus_readInputVoltage(huart1);
+  sk60plus_readInputVoltage(huart2);
+  sk60plus_readInputVoltage(huart3);
 
 #endif
 
@@ -124,7 +141,7 @@ int main(void)
 
   HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
-  printf("%li LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
+  printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
 
   while (1)
   {

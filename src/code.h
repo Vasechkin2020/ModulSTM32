@@ -173,6 +173,16 @@ extern float getAngle(int32_t _pulse); // Пересчет импульсов в
 // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+    if (huart->Instance == USART1)
+    {
+        dataUART[0].flag = 1; // Обработка полученных данных
+        dataUART[0].len = 11;
+        dataUART[0].num = 0;
+        dataUART[0].adr = rx_bufferUART1;
+        dataUART[0].angle = getAngle(motor[0].position);
+        status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11); // После обработки вновь запустить прием
+        dataUART[0].status = status;
+    }
     if (huart->Instance == USART2)
     {
         dataUART[1].flag = 1; // Обработка полученных данных
@@ -206,19 +216,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 // Коллбэк, вызываемый при событии UART Idle по окончания приема
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-    if (huart->Instance == USART1)
-    {
-        dataUART[0].flag = 1;
-        dataUART[0].len = Size;
-        dataUART[0].num = 0;
-        dataUART[0].adr = rx_bufferUART1;
-        dataUART[0].angle = getAngle(motor[0].position);
-        status = HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // После обработки вновь запустить прием
-        dataUART[0].status = status;
-    }
-}
+// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+// {
+//     if (huart->Instance == USART1)
+//     {
+//         dataUART[0].flag = 1;
+//         dataUART[0].len = Size;
+//         dataUART[0].num = 0;
+//         dataUART[0].adr = rx_bufferUART1;
+//         dataUART[0].angle = getAngle(motor[0].position);
+//         status = HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // После обработки вновь запустить прием
+//         dataUART[0].status = status;
+//     }
+// }
 
 
 
