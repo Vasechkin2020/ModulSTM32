@@ -62,7 +62,7 @@ void laserInit()
     laser80_stopMeasurement(huart2, 0x80);
     laser80_stopMeasurement(huart3, 0x80);
     laser80_stopMeasurement(huart4, 0x80);
-    HAL_Delay(3000);
+    HAL_Delay(1000);
     laser80_controlLaser(huart1, 1, 0x80);
     laser80_controlLaser(huart2, 1, 0x80);
     laser80_controlLaser(huart3, 1, 0x80);
