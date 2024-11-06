@@ -26,6 +26,8 @@ void timer6();                                                             // О
 void workingTimer();                                                       // Отработка действий по таймеру в 1, 50, 60 милисекунд
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size); // Коллбэк, вызываемый при событии UART Idle по окончания приема
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);                   // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
+void laserInit();                                                          // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
+
 float distanceUART1 = 0;
 int flagContinius = 0;
 
@@ -70,7 +72,6 @@ void timer6() // Обработчик прерывания таймера TIM6	1
         flag_timer_1sec = true;
     }
 }
-
 
 void workingTimer() // Отработка действий по таймеру в 1, 50, 60 милисекунд
 {
@@ -141,13 +142,14 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
 
 struct dataUART
 {
-    uint8_t flag;   // Флаг готовности данных
-    uint8_t len;    // Длинна полученных данных в буфере
-    uint8_t num;    // Номер UART
-    uint8_t status; // Номер UART
-    float angle;    // Угол в котором находился мотор в момент когда пришли данные по измерению
-    float distance; // Дистанция по последнему хорошему измерению
-    uint8_t *adr;   // Адрес буфера
+    uint8_t flag;     // Флаг готовности данных
+    uint8_t len;      // Длинна полученных данных в буфере
+    uint8_t num;      // Номер UART
+    uint8_t status;   // Номер UART
+    float angle;      // Угол в котором находился мотор в момент когда пришли данные по измерению
+    float distance;   // Дистанция по последнему хорошему измерению
+    uint8_t *adr;     // Адрес буфера
+    uint16_t quality; // Качество сигнала
 };
 
 struct dataUART dataUART[4];
@@ -175,42 +177,63 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART1)
     {
-        dataUART[0].flag = 1; // Обработка полученных данных
+#ifdef LASER80
         dataUART[0].len = 11;
+#endif
+#ifdef LASER60
+        dataUART[0].len = 13;
+#endif
+
+        dataUART[0].flag = 1; // Обработка полученных данных
         dataUART[0].num = 0;
         dataUART[0].adr = rx_bufferUART1;
         dataUART[0].angle = getAngle(motor[0].position);
-        status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11); // После обработки вновь запустить прием
+        status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, dataUART[0].len); // После обработки вновь запустить прием
         dataUART[0].status = status;
     }
-    if (huart->Instance == USART2)
+    else if (huart->Instance == USART2)
     {
-        dataUART[1].flag = 1; // Обработка полученных данных
+#ifdef LASER80
         dataUART[1].len = 11;
+#endif
+#ifdef LASER60
+        dataUART[1].len = 13;
+#endif
+        dataUART[1].flag = 1; // Обработка полученных данных
         dataUART[1].num = 1;
         dataUART[1].adr = rx_bufferUART2;
         dataUART[1].angle = getAngle(motor[1].position);
-        status = HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11); // После обработки вновь запустить прием
+        status = HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, dataUART[1].len); // После обработки вновь запустить прием
         dataUART[1].status = status;
     }
     else if (huart->Instance == USART3)
     {
-        dataUART[2].flag = 1; // Обработка полученных данных
+#ifdef LASER80
         dataUART[2].len = 11;
+#endif
+#ifdef LASER60
+        dataUART[2].len = 13;
+#endif
+        dataUART[2].flag = 1; // Обработка полученных данных
         dataUART[2].num = 2;
         dataUART[2].adr = rx_bufferUART3;
         dataUART[2].angle = getAngle(motor[2].position);
-        status = HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // После обработки вновь запустить прием
+        status = HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, dataUART[2].len); // После обработки вновь запустить прием
         dataUART[2].status = status;
     }
     else if (huart->Instance == USART4)
     {
-        dataUART[3].flag = 1; // Обработка полученных данных
+#ifdef LASER80
         dataUART[3].len = 11;
+#endif
+#ifdef LASER60
+        dataUART[3].len = 13;
+#endif
+        dataUART[3].flag = 1; // Обработка полученных данных
         dataUART[3].num = 3;
         dataUART[3].adr = rx_bufferUART4;
         dataUART[3].angle = getAngle(motor[3].position);
-        status = HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // После обработки вновь запустить прием
+        status = HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, dataUART[3].len); // После обработки вновь запустить прием
         dataUART[3].status = status;
     }
 }
@@ -229,8 +252,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 //         dataUART[0].status = status;
 //     }
 // }
-
-
 
 // Собираем нужные данные и пишем в структуру на отправку
 void collect_Data_for_Send()
@@ -330,8 +351,6 @@ void executeDataReceive()
                                                        //     // printf(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
 }
 
-
-
 void loop()
 {
     // if (HAL_GetTick() - timeStart >= 10000)
@@ -341,8 +360,8 @@ void loop()
     if (millis() - timeSpi > 3000) // Если обмена нет больше 5 секунд то отключаем все
     {
         HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-        Data2Modul_receive.controlLaser.mode = 0;                          // Отключаем лазерные датчики
-        Data2Modul_receive.controlMotor.mode = 0;                          // Отключаем моторы
+        Data2Modul_receive.controlLaser.mode = 0;                        // Отключаем лазерные датчики
+        Data2Modul_receive.controlMotor.mode = 0;                        // Отключаем моторы
         // laser80_stopMeasurement(huart1,0x80);
         // laser80_stopMeasurement(huart2,0x80);
         // laser80_stopMeasurement(huart3,0x80);
@@ -401,8 +420,89 @@ void loop()
     }
 
     // HAL_Delay(); // Пауза 500 миллисекунд.
-void workingTimer(); // Отработка действий по таймеру в 1, 50, 60 милисекунд
+    void workingTimer(); // Отработка действий по таймеру в 1, 50, 60 милисекунд
+}
 
+void laserInit() // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
+{
+
+#ifdef LASER80
+
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Двнные оказываются в буфере rx_bufferUART1
+
+    laser80_Init(); // Инициализация лазеров
+
+    sk60plus_autoBaund(huart1);
+    sk60plus_autoBaund(huart2);
+    sk60plus_autoBaund(huart3);
+    sk60plus_autoBaund(huart4);
+
+    // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
+    HAL_UART_DMAStop(&huart1); // Остановка DMA
+    HAL_UART_DMAStop(&huart2); // Остановка DMA
+    HAL_UART_DMAStop(&huart3); // Остановка DMA
+    HAL_UART_DMAStop(&huart4); // Остановка DMA
+
+    memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
+    memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
+    memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
+    memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
+
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+
+#endif
+
+#ifdef LASER60
+
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ
+    HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
+    HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
+    HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
+    HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
+    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11);                     // Данные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Данные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Данные оказываются в буфере rx_bufferUART1
+
+    // laser80_Init(); // Инициализация лазеров
+
+    sk60plus_autoBaund();
+
+    sk60plus_setLaser(huart1, 1);
+    sk60plus_setLaser(huart2, 1);
+    sk60plus_setLaser(huart3, 1);
+
+    sk60plus_readSerialNumber(huart1);
+    sk60plus_readSerialNumber(huart2);
+    sk60plus_readSerialNumber(huart3);
+
+    sk60plus_readSoftwareVersion(huart1);
+    sk60plus_readSoftwareVersion(huart2);
+    sk60plus_readSoftwareVersion(huart3);
+
+    sk60plus_readHardwareVersion(huart1);
+    sk60plus_readHardwareVersion(huart2);
+    sk60plus_readHardwareVersion(huart3);
+
+    sk60plus_readInputVoltage(huart1);
+    sk60plus_readInputVoltage(huart2);
+    sk60plus_readInputVoltage(huart3);
+
+    sk60plus_setLaser(huart1, 0);
+    sk60plus_setLaser(huart2, 0);
+    sk60plus_setLaser(huart3, 0);
+
+    sk60plus_startSingleAuto(huart1);
+    sk60plus_startSingleAuto(huart2);
+    sk60plus_startSingleAuto(huart3);
+
+#endif
 }
 
 #endif /*CODE_H*/

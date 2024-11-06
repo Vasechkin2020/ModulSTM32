@@ -103,7 +103,7 @@ uint16_t _sVersion = 0;      // Версия софта. Изначально 0 
 uint32_t _sNumber = 0;       // Серийный номер. Изначально 0 (неопределенный)
 uint32_t _distance = 0;      //
 float _angle = 0;            // Угол какой был у маторов в момент старта измерения
-uint32_t _signalQuality = 0; //
+uint16_t _signalQuality = 0; //
 uint16_t _inputVoltage = 0;  //
 uint16_t _offSet = 0;        // Поправочное смещение. Изначально 0 (неопределенный)
 
@@ -191,7 +191,7 @@ uint8_t calcCs(uint8_t *data_, uint8_t len_) // Расчет контрольн�
     return sum;
 }
 // Установка скорости обмена
-void sk60plus_autoBaund() 
+void sk60plus_autoBaund()
 {
     HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 0); // Пин датчика PWREN
     HAL_Delay(100);
@@ -209,7 +209,7 @@ void sk60plus_autoBaund()
 }
 
 // Function: master set slave’s address, this address will not lost after module power off; Slave address set to 0xYY (!!!Beware: address only take bit[6:0], other bits will be ignored).
-void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t addr_, uint8_t YY_) 
+void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t addr_, uint8_t YY_)
 {
     printf("setModulAddress ->");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
@@ -232,7 +232,7 @@ void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t addr_, uint8_t Y
     }
 }
 // Function: master read out the module’s HW version number;
-void sk60plus_readHardwareVersion(UART_HandleTypeDef huart) 
+void sk60plus_readHardwareVersion(UART_HandleTypeDef huart)
 {
     printf("readHardwareVersion -> ");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
@@ -257,7 +257,7 @@ void sk60plus_readHardwareVersion(UART_HandleTypeDef huart)
     }
 }
 // Function: master read out the module’s SW version number;
-void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart) 
+void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart)
 {
     printf("readSoftwareVersion -> ");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
@@ -287,7 +287,7 @@ void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart)
     }
 }
 // Function: master read out the module’s Serial number;
-void sk60plus_readSerialNumber(UART_HandleTypeDef huart) 
+void sk60plus_readSerialNumber(UART_HandleTypeDef huart)
 {
     printf("readSerialNumber ->");
     memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
@@ -310,7 +310,8 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart)
     if (_bufRead[0] == 0xAA) // Если в буфере правильный ответ
     {
         //_sNumber = (uint16_t)(_bufRead[7] | (_bufRead[6] << 8));
-        _sNumber = (uint32_t)(_bufRead[9] | (_bufRead[8] << 8) | _bufRead[7] << 16 | (_bufRead[6] << 24));
+        //_sNumber = (uint32_t)(_bufRead[9] | (_bufRead[8] << 8) | _bufRead[7] << 16 | (_bufRead[6] << 24));
+        _sNumber = (uint32_t)(_bufRead[9] | (_bufRead[6] << 8) | _bufRead[7] << 16 | (_bufRead[8]) << 24);
 
         printf(" sNumber = %0#10lX = %li \n", _sNumber, _sNumber);
     }
@@ -321,12 +322,12 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart)
 }
 
 // Function: master read out the module’s input voltage in mV with BCD encode;
-void sk60plus_readInputVoltage(UART_HandleTypeDef huart) 
+void sk60plus_readInputVoltage(UART_HandleTypeDef huart)
 {
     printf("readInputVoltage -> ");
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
-    HAL_UART_DMAStop(&huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем. НЕПОНЯТНО ПОУЧЕМУ ВОЗВРАЩАЕТСЯ 11 байт, ПО ДОКУМЕНТАЦИИ 9
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    HAL_UART_DMAStop(&huart);                           // Остановка DMA
+    status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
 
     uint8_t addr = _addr | 0b10000000; // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
@@ -349,50 +350,84 @@ void sk60plus_readInputVoltage(UART_HandleTypeDef huart)
         printf("readInputVoltage = ERROR !!! \n");
     }
 }
-// // Метод считывания данных ответа в буфер общий для всех. Потом берем нужные байты. Если ответ короче то в конце FF будет
-// bool sk60plus_readBuf()
-// {
-//     for (int i = 0; i < 13; i++)
-//     {
-//         _bufRead[i] = Serial2.read();
-//         // if (_bufRead[i] != 0xFF)
-//         // printf("%0#4X-", _bufRead[i]);
-//     }
-//     // printf("\n");
-//     //  uint8_t addr = _addr | 0b10000000;                 // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
-//     if (_bufRead[0] == 0xAA) // Если первый байт 0xAA  и ответ от нужного датчика
-//     {
-//         return true;
-//     }
-//     else
-//     {
-//         return false;
-//     }
-// }
+// Function: turn on or turn off laser beam, if 0xZZ = 0x01 laser on, 0xZZ = 0x00 laser off.
+void sk60plus_setLaser(UART_HandleTypeDef huart, uint8_t ZZ_)
+{
+    printf("setLaser -> ");
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    HAL_UART_DMAStop(&huart);                           // Остановка DMA
+    status = HAL_UART_Receive_DMA(&huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+    printf("status= %i \r\n", status);
 
-// void sk60plus_stopContinuous() // Function: Master transfer one uint8_t 0x58 (upper case character ‘X’) to stop continuous measure mode immediately
-// {
-//     Serial2.write(0x58); //
-//     printf("stopContinuous = %0#6X \n", 0x58);
-// }
+    uint8_t buf[9] = {0xAA, _addr, 0x01, 0xBE, 0x00, 0x01, 0x00, ZZ_, 0x00};
+    buf[8] = calcCs(buf, 9);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
+    HAL_Delay(50);
 
-// void sk60plus_setLaser(UART_HandleTypeDef huart, uint8_t ZZ_) // Function: turn on or turn off laser beam, if 0xZZ = 0x01 laser on, 0xZZ = 0x00 laser off.
-// {
-//     printf("setLaser -> ");
-//     clearBuf();
-//     uint8_t buf[9] = {0xAA, _addr, 0x01, 0xBE, 0x00, 0x01, 0x00, ZZ_, 0x00};
-//     buf[8] = calcCs(buf, 9);
-//     Serial2.write(buf, 9);
-//     delay(50);
-//     if (readBuf()) // Если ответ правильный смотри что в ответе
-//     {
-//         printf("setLaser status = %0#6X  \n", _bufRead[7]);
-//     }
-//     else
-//     {
-//         printf("setLaser status = ERROR !!! \n");
-//     }
-// }
+    if (_bufRead[0] == 0xAA) // Если ответ правильный смотри что в ответе
+    {
+        printf("setLaser status = %0#6X  \n", _bufRead[7]);
+    }
+    else
+    {
+        printf("setLaser status = ERROR !!! \n");
+    }
+}
+
+// Function: Master transfer one uint8_t 0x58 (upper case character ‘X’) to stop continuous measure mode immediately
+void sk60plus_stopContinuous(UART_HandleTypeDef huart)
+{
+    printf("stopContinuous = %0#6X \n", 0x58);
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    HAL_UART_DMAStop(&huart);                           // Остановка DMA
+    status = HAL_UART_Receive_DMA(&huart, _bufRead, 1); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+    printf("status= %i \r\n", status);
+
+    uint8_t buf[1] = {0x58};
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
+    // HAL_Delay(10);
+}
+
+// Function: Initiate slave to do 1-shot measure in Auto mode.
+void sk60plus_startSingleAuto(UART_HandleTypeDef huart)
+{
+    printf("startSingleAuto \n");
+    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
+    HAL_UART_DMAStop(&huart);                            // Остановка DMA
+    status = HAL_UART_Receive_DMA(&huart, _bufRead, 13); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+
+    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00};
+    buf[8] = calcCs(buf, 9);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
+    HAL_Delay(250);
+
+    if (_bufRead[0] == 0xAA)
+    {
+        _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
+        _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
+    }
+    printf("startSingleAuto distance = %li mm signalQuality= %i \n", _distance, _signalQuality);
+}
+// Function: Initiate slave to do 1-shot measure in Auto mode.
+void sk60plus_startContinuousAuto(UART_HandleTypeDef huart, uint8_t *rx_bufferUART_)
+{
+    printf("startContinuousAuto \n");
+    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
+    HAL_UART_DMAStop(&huart);                            // Остановка DMA
+    status = HAL_UART_Receive_DMA(&huart, rx_bufferUART_, 13); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+
+    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x06, 0x00};
+    buf[8] = calcCs(buf, 9);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
+    // HAL_Delay(250);
+
+    // if (readBuf())
+    // {
+    //     _distance = (uint32_t)(_bufRead[9] | _bufRead[6] << 24 | _bufRead[7] << 16 | _bufRead[8] << 8);
+    //     _signalQuality = (uint16_t)(_bufRead[11] | _bufRead[10] << 8);
+    // }
+    printf("startContinuousAuto distance = %li mm signalQuality= %i \n", _distance, _signalQuality);
+}
 
 // void sk60plus_setModulMeasureOffset(int16_t ZZYY_) // Function: master set slave’s measure offset. For example, if the offset 0xZZYY = 0x7B(+123) , it means the final output of measure result will PLUS 123 millimeters , if the offset 0xZZYY = 0xFF85(-123), it means the final output of measure result will MINUS 123 millimeters
 // {
@@ -506,6 +541,27 @@ void sk60plus_readInputVoltage(UART_HandleTypeDef huart)
 //     else
 //     {
 //         printf("readMeasureResult ERROR \n");
+//         return false;
+//     }
+// }
+
+// // Метод считывания данных ответа в буфер общий для всех. Потом берем нужные байты. Если ответ короче то в конце FF будет
+// bool sk60plus_readBuf()
+// {
+//     for (int i = 0; i < 13; i++)
+//     {
+//         _bufRead[i] = Serial2.read();
+//         // if (_bufRead[i] != 0xFF)
+//         // printf("%0#4X-", _bufRead[i]);
+//     }
+//     // printf("\n");
+//     //  uint8_t addr = _addr | 0b10000000;                 // R/W indicate bit, 0: Master write to Slave, 1: Master read from Slave  Slave address is 0x51, address has only 7-bits, so the address is from 0x00 to 0x7F, 0x00 is the default address before master issue module address change command, 0x7F is the broadcast address reserved for one-master to multi-slave network;
+//     if (_bufRead[0] == 0xAA) // Если первый байт 0xAA  и ответ от нужного датчика
+//     {
+//         return true;
+//     }
+//     else
+//     {
 //         return false;
 //     }
 // }
