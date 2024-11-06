@@ -110,7 +110,7 @@ uint16_t _offSet = 0;        // Поправочное смещение. Изн�
 void init(uint8_t addr_);
 uint8_t calcCs(uint8_t *data_, uint8_t len_);
 
-void sk60plus_autoBaund(UART_HandleTypeDef huart); // Установка скорости обмена
+void sk60plus_autoBaund(); // Установка скорости обмена
 
 void sk60plus_readHardwareVersion(UART_HandleTypeDef huart);                  // Function: master read out the module’s HW version number;
 void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart);                  // Function: master read out the module’s SW version number;
@@ -268,7 +268,7 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart) // Function: master rea
     uint8_t buf[5] = {0xAA, addr, 0x00, 0x0E, 0x00};
     buf[4] = calcCs(buf, 5);
     HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
-    HAL_Delay(25);
+    HAL_Delay(100);
 
     if (_bufRead[0] == 0xAA) // Если в буфере правильный ответ
     {
@@ -281,16 +281,19 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart) // Function: master rea
     }
 }
 
-void sk60plus_autoBaund(UART_HandleTypeDef huart) // Установка скорости обмена
+void sk60plus_autoBaund() // Установка скорости обмена
 {
     HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 0); // Пин датчика PWREN
     HAL_Delay(100);
     HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 1);
     HAL_Delay(100);
     uint8_t buf[1] = {0x55};
-    for (int i = 0; i < 10; i++) // в течении 2 секунд посылкаем байт 0х55 для установки нужной скорости обмена
+    for (int i = 0; i < 5; i++) // в течении 2 секунд посылкаем байт 0х55 для установки нужной скорости обмена
     {
-        HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
+        HAL_UART_Transmit(&huart1, buf, sizeof(buf), 100); // Отправляем команду
+        HAL_UART_Transmit(&huart2, buf, sizeof(buf), 100); // Отправляем команду
+        HAL_UART_Transmit(&huart3, buf, sizeof(buf), 100); // Отправляем команду
+        HAL_UART_Transmit(&huart4, buf, sizeof(buf), 100); // Отправляем команду
         HAL_Delay(25);
     }
 }

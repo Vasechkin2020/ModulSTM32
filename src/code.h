@@ -330,13 +330,15 @@ void loop()
     // }
     if (millis() - timeSpi > 3000) // Если обмена нет больше 5 секунд то отключаем все
     {
+        HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
         Data2Modul_receive.controlLaser.mode = 0;                          // Отключаем лазерные датчики
         Data2Modul_receive.controlMotor.mode = 0;                          // Отключаем моторы
-        laser80_stopMeasurement(huart1,0x80);
-        laser80_stopMeasurement(huart2,0x80);
-        laser80_stopMeasurement(huart3,0x80);
-        laser80_stopMeasurement(huart4,0x80);
+        // laser80_stopMeasurement(huart1,0x80);
+        // laser80_stopMeasurement(huart2,0x80);
+        // laser80_stopMeasurement(huart3,0x80);
+        // laser80_stopMeasurement(huart4,0x80);
         HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+        HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
     }
     //----------------------------- По факту обмена данными с верхним уровнем --------------------------------------
 #ifdef SPI_protocol
