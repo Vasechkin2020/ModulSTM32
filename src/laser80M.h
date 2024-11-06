@@ -6,10 +6,21 @@ enum codeOperation codeOperationUART2;
 enum codeOperation codeOperationUART3;
 enum codeOperation codeOperationUART4;
 
+#define RX_BUFFER_SIZE 32                     // Размер буфера приема
+uint8_t rx_bufferUART1[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+uint8_t rx_bufferUART2[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+uint8_t rx_bufferUART3[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
+
 //     //*********************** ОБЬЯВЛЕНИЕ ФУНКЦИЙ *****************************************
+
+
+void laserInit();
 uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_); // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1
 //     // Функции применимык к конкретному датчику, так как задается адрес датчика
 
+
+float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_);// Вычисление дистанции по полученному буферу или ошибка
 void laser80_controlLaser(UART_HandleTypeDef huart, uint8_t status_, uint8_t addr_); // Управление лазером 1- Включен 0-Выключен
 
 void laser80_singleMeasurement(UART_HandleTypeDef huart, uint8_t addr_);     // Одиночное измерение примерно 800 милисекунд
@@ -31,6 +42,67 @@ bool laser80_setResolution(UART_HandleTypeDef huart, uint8_t reso_);            
 // };
 
 //     //*********************** РЕАЛИЗАЦИЯ ФУНКЦИЙ *****************************************
+
+// Инициализация лазеров
+void laserInit()
+{
+
+    // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    // HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    // HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    // HAL_Delay(100);
+
+    // laser80_setAddress(huart1, 0x80);
+    // laser80_setAddress(huart2, 0x80);
+    // laser80_setAddress(huart3, 0x80);
+    // laser80_setAddress(huart4, 0x80);
+    // HAL_Delay(1000);
+    laser80_stopMeasurement(huart1, 0x80);
+    laser80_stopMeasurement(huart2, 0x80);
+    laser80_stopMeasurement(huart3, 0x80);
+    laser80_stopMeasurement(huart4, 0x80);
+    HAL_Delay(3000);
+    laser80_controlLaser(huart1, 1, 0x80);
+    laser80_controlLaser(huart2, 1, 0x80);
+    laser80_controlLaser(huart3, 1, 0x80);
+    laser80_controlLaser(huart4, 1, 0x80);
+    HAL_Delay(1000);
+    laser80_setTimeInterval(huart1, 0);
+    laser80_setTimeInterval(huart2, 0);
+    laser80_setTimeInterval(huart3, 0);
+    laser80_setTimeInterval(huart4, 0);
+    HAL_Delay(1000);
+    laser80_setResolution(huart1, 1);
+    laser80_setResolution(huart2, 1);
+    laser80_setResolution(huart3, 1);
+    laser80_setResolution(huart4, 1);
+    HAL_Delay(1000);
+    laser80_setRange(huart1, 30);
+    laser80_setRange(huart2, 30);
+    laser80_setRange(huart3, 30);
+    laser80_setRange(huart4, 30);
+    HAL_Delay(1000);
+    laser80_setStartingPoint(huart1, 1);
+    laser80_setStartingPoint(huart2, 1);
+    laser80_setStartingPoint(huart3, 1);
+    laser80_setStartingPoint(huart4, 1);
+    HAL_Delay(1000);
+    laser80_setFrequency(huart1, 10);
+    laser80_setFrequency(huart2, 10);
+    laser80_setFrequency(huart3, 10);
+    laser80_setFrequency(huart4, 10);
+    HAL_Delay(1000);
+
+    // Непрерывное измерение
+    laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
+    laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
+    laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
+    laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
+
+    // HAL_Delay(5000);
+    // laser80_stopMeasurement(huart1,0x80);
+}
 
 // Прекратить измерение
 void laser80_stopMeasurement(UART_HandleTypeDef huart, uint8_t addr_)
@@ -110,6 +182,26 @@ void laser80_singleMeasurement(UART_HandleTypeDef huart, uint8_t addr_)
     //     return false;
     // }
 }
+
+// Вычисление дистанции по полученному буферу или ошибка
+float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_)
+{
+    float distance = 0;
+    if (len_ == 11 && rx_bufferUART[3] != 0x45 && rx_bufferUART[4] != 0x52 && rx_bufferUART[5] != 0x52) // по кодам ASCII ERR
+    {
+        uint8_t sot = (rx_bufferUART[3] - 0x30) * 100;    // По таблице ASCII отнимаем 48 и получаем сколько сотен метров
+        uint8_t des = (rx_bufferUART[4] - 0x30) * 10;     // По таблице ASCII отнимаем 48 и получаем сколько десятков метров
+        uint8_t met = (rx_bufferUART[5] - 0x30) * 1;      // По таблице ASCII отнимаем 48 и получаем сколько единиц метров
+        float desMet = (rx_bufferUART[7] - 0x30) * 0.1;   // По таблице ASCII отнимаем 48 и получаем сколько десятых долей метра
+        float sotMet = (rx_bufferUART[8] - 0x30) * 0.01;  // По таблице ASCII отнимаем 48 и получаем сколько сотых долей метра
+        float tysMet = (rx_bufferUART[9] - 0x30) * 0.001; // По таблице ASCII отнимаем 48 и получаем сколько тысячных долей метра
+        distance = sot + des + met + desMet + sotMet + tysMet;
+        // printf("Meas= %i - %i - %i . %.1f %.2f %.3f | ", sot, des, met, desMet, sotMet, tysMet);
+        // printf("Distance= %.3f \n", distance);
+    }
+    return distance;
+}
+
 
 // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
 void laser80_broadcastMeasurement(UART_HandleTypeDef huart)
