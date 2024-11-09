@@ -398,36 +398,36 @@ void laserInit() // Инициализация лазеров в зависим�
 
     sk60plus_autoBaund();
 
-    sk60plus_setLaser(huart1, 1);
-    sk60plus_setLaser(huart2, 1);
-    sk60plus_setLaser(huart3, 1);
+    sk60plus_setLaser(&huart1, 1);
+    sk60plus_setLaser(&huart2, 1);
+    sk60plus_setLaser(&huart3, 1);
 
-    sk60plus_readSerialNumber(huart1);
-    sk60plus_readSerialNumber(huart2);
-    sk60plus_readSerialNumber(huart3);
+    sk60plus_readSerialNumber(&huart1);
+    sk60plus_readSerialNumber(&huart2);
+    sk60plus_readSerialNumber(&huart3);
 
-    sk60plus_readSoftwareVersion(huart1);
-    sk60plus_readSoftwareVersion(huart2);
-    sk60plus_readSoftwareVersion(huart3);
+    sk60plus_readSoftwareVersion(&huart1);
+    sk60plus_readSoftwareVersion(&huart2);
+    sk60plus_readSoftwareVersion(&huart3);
 
-    sk60plus_readHardwareVersion(huart1);
-    sk60plus_readHardwareVersion(huart2);
-    sk60plus_readHardwareVersion(huart3);
+    sk60plus_readHardwareVersion(&huart1);
+    sk60plus_readHardwareVersion(&huart2);
+    sk60plus_readHardwareVersion(&huart3);
 
-    sk60plus_readInputVoltage(huart1);
-    sk60plus_readInputVoltage(huart2);
-    sk60plus_readInputVoltage(huart3);
+    sk60plus_readInputVoltage(&huart1);
+    sk60plus_readInputVoltage(&huart2);
+    sk60plus_readInputVoltage(&huart3);
 
-    sk60plus_setLaser(huart1, 0);
-    sk60plus_setLaser(huart2, 0);
-    sk60plus_setLaser(huart3, 0);
+    sk60plus_setLaser(&huart1, 0);
+    sk60plus_setLaser(&huart2, 0);
+    sk60plus_setLaser(&huart3, 0);
 
-    sk60plus_startSingleAuto(huart1);
-    sk60plus_startSingleAuto(huart2);
-    sk60plus_startSingleAuto(huart3);
+    sk60plus_startSingleAuto(&huart1);
+    sk60plus_startSingleAuto(&huart2);
+    sk60plus_startSingleAuto(&huart3);
 
-    // sk60plus_startContinuousAuto(huart1, rx_bufferUART1);
-    sk60plus_startContinuousSlow(huart1, rx_bufferUART1);
+    sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
+    //sk60plus_startContinuousSlow(&huart1, rx_bufferUART1);
 
 #endif
 }
