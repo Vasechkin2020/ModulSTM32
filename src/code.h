@@ -30,13 +30,31 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size); // К
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);                   // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
 void laserInit();                                                          // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
 
-typedef struct SDataLaser
+struct dataUART
 {
-    uint32_t distance;
-    uint16_t signalQuality;
-} SDataLaser;
+    uint8_t flag;      // Флаг готовности данных
+    uint8_t num;       // Номер UART
+    uint8_t status;    // Номер UART
+    uint32_t distance; // Дистанция по последнему хорошему измерению
+    uint16_t quality;  // Качество сигнала
+    float angle;       // Угол в котором находился мотор в момент когда пришли данные по измерению
+    uint8_t *adr;      // Адрес буфера
+    UART_HandleTypeDef *huart;
+};
 
-SDataLaser dataLaser[4]; // Структура куда пишем даные из датчиков
+struct dataUART dataUART[4];
+uint8_t lenDataLaser; // Длинна полученных данных в буфере
+HAL_StatusTypeDef status;
+
+bool flagCallBackUart = false; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
+
+// typedef struct SDataLaser
+// {
+//     uint32_t distance;
+//     uint16_t signalQuality;
+// } SDataLaser;
+
+// SDataLaser dataLaser[4]; // Структура куда пишем даные из датчиков
 
 int flagContinius = 0;
 
@@ -148,23 +166,6 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
     //     printf("Received byte: 0x%02X\n", data[i]);
     // }
 }
-
-struct dataUART
-{
-    uint8_t flag;     // Флаг готовности данных
-    uint8_t num;      // Номер UART
-    uint8_t status;   // Номер UART
-    float angle;      // Угол в котором находился мотор в момент когда пришли данные по измерению
-    float distance;   // Дистанция по последнему хорошему измерению
-    uint8_t *adr;     // Адрес буфера
-    uint16_t quality; // Качество сигнала
-};
-
-struct dataUART dataUART[4];
-uint8_t lenDataLaser; // Длинна полученных данных в буфере
-HAL_StatusTypeDef status;
-
-bool flagCallBackUart = false; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
 
 // int sss;
 
@@ -330,19 +331,24 @@ void executeDataReceive()
                                                        //     // printf(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
 }
 
-
-
 void laserInit() // Инициализация лазеров в зависимоти от типа датчика. определяем переменные и буфер приема для каждого UART
 {
     // Это общие данные для любых датчиков
     dataUART[0].num = 0;
     dataUART[0].adr = rx_bufferUART1;
+    dataUART[0].huart = &huart1;
+
     dataUART[1].num = 1;
     dataUART[1].adr = rx_bufferUART2;
+    dataUART[1].huart = &huart2;
+
     dataUART[2].num = 2;
     dataUART[2].adr = rx_bufferUART3;
+    dataUART[2].huart = &huart3;
+
     dataUART[3].num = 3;
     dataUART[3].adr = rx_bufferUART4;
+    dataUART[3].huart = &huart4;
 
 #ifdef LASER80
     lenDataLaser = 11;
@@ -420,7 +426,8 @@ void laserInit() // Инициализация лазеров в зависим�
     sk60plus_startSingleAuto(huart2);
     sk60plus_startSingleAuto(huart3);
 
-    sk60plus_startContinuousAuto(huart1, rx_bufferUART1);
+    // sk60plus_startContinuousAuto(huart1, rx_bufferUART1);
+    sk60plus_startContinuousSlow(huart1, rx_bufferUART1);
 
 #endif
 }
@@ -432,32 +439,38 @@ void workingLaser()
         if (dataUART[i].flag == 1)
         {
             dataUART[i].flag = 0;
-            // printf("%li Len%i = %i status= %i   /   ", millis(), dataUART[i].num,  dataUART[i].len, dataUART[i].status);
-            for (int i = 0; i < lenDataLaser; i++)
-            {
-                // printf("%x ", rx_bufferUART1[i]);
-            }
-            // printf("\r\n");
-            // float dist;
+
 #ifdef LASER80
-            dataLaser[i].distance = laser80_calcDistance(dataUART[i].adr, lenDataLaser);
+            dataUART[i].distance = laser80_calcDistance(dataUART[i].adr, lenDataLaser);
 #endif
 
 #ifdef LASER60
-            dataLaser[i].distance = laser60_calcDistance(dataUART[i].adr);
-            dataLaser[i].signalQuality = laser60_calcSignalQuality(dataUART[i].adr);
+            if (dataUART[i].adr[0] == 0xAA) // Если ответ без ошибки то
+            {
+                dataUART[i].distance = laser60_calcDistance(dataUART[i].adr);
+                dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
+                printf(" UART%i distance = %lu signalQuality = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+            }
+            else
+            {
+                printf("%li UART%i status= %i   /   ", millis(), dataUART[i].num, dataUART[i].status);
+                for (int j = 0; j < lenDataLaser; j++)
+                {
+                    printf("%x ", dataUART[i].adr[j]);
+                }
+                printf(" Error dataUART%i. \r\n", dataUART[i].num);
+                do
+                {
+                    HAL_UART_DMAStop(dataUART[i].huart);
+                    memset(dataUART[i].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+                    status = HAL_UART_Receive_DMA(dataUART[i].huart, dataUART[i].adr, lenDataLaser); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+                    //printf("New status0 = %i ", status);
+                    HAL_Delay(1);
+                    
+                } while (status != 0);
+                printf("New status2 = %i\r\n", status);
+            }
 #endif
-
-            // if (dist != 0) // Расчитываем дистанцию. Возвращаем значение или 0 если ошибка
-            // {
-            //     // printf(" UART%i = %.3f \r\n", dataUART[i].num, dist);
-            //     dataUART[i].distance = dist;
-            // }
-            // else
-            // {
-            //     printf("Error dataUART%i. \r\n", dataUART[i].num);
-            // }
-            memset(dataUART[i].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
         }
     }
 }
@@ -488,10 +501,7 @@ void workingSPI()
         // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Запуск обмена данными по SPI с использованием DMA
     }
 #endif
-
 }
-
-
 
 void loop()
 {

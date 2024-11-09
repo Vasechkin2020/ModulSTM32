@@ -45,11 +45,11 @@ at the same time, and no slave reply measure result until master ask one of them
 */
 
 extern HAL_StatusTypeDef status;
-extern bool flagCallBackUart;          // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
-//extern struct SDataLaser dataLaser[4]; // Структура куда пишем даные из датчиков
-uint8_t _addr = 0x00;                  // Адрес датчика. Заполняем при инициализации
-uint8_t _bufRead[13];                  // Буфер для чтения // Буфер для приема одиночного сообщения без цикла, а после небольшой задержки
-uint8_t const pinPwrEn = 22;           // Пин на котором управляем включением/выключением датчиков
+extern bool flagCallBackUart; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
+// extern struct SDataLaser dataLaser[4]; // Структура куда пишем даные из датчиков
+uint8_t _addr = 0x00;        // Адрес датчика. Заполняем при инициализации
+uint8_t _bufRead[13];        // Буфер для чтения // Буфер для приема одиночного сообщения без цикла, а после небольшой задержки
+uint8_t const pinPwrEn = 22; // Пин на котором управляем включением/выключением датчиков
 
 enum statusCode
 {
@@ -140,7 +140,7 @@ void sk60plus_getStatus();                 // Function: master read out the modu
 bool sk60plus_readStatus();        // Function: master read out the module’s status after previous command executed;
 bool sk60plus_readMeasureResult(); // Function: master read out the distance measugetesult;
 
-uint32_t laser60_calcDistance(uint8_t *rx_bufferUART); // Расчет растояния на основе полученных данных
+uint32_t laser60_calcDistance(uint8_t *rx_bufferUART);      // Расчет растояния на основе полученных данных
 uint16_t laser60_calcSignalQuality(uint8_t *rx_bufferUART); // Расчет качества сигнала на основе полученных данных
 
 /* Master send out 1-shot measure commands to slave address 0x7F, that will make all online slaves to measure distance at the same time， but none of them will return its measure result to master until
@@ -445,6 +445,18 @@ void sk60plus_startContinuousAuto(UART_HandleTypeDef huart, uint8_t *rx_bufferUA
     printf("startContinuousAuto distance = %li mm signalQuality= %i \n", _distance, _signalQuality);
 }
 
+void sk60plus_startContinuousSlow(UART_HandleTypeDef huart, uint8_t *rx_bufferUART_) // Function: Initiate slave to do continuous measure in slow mode.
+{
+    flagCallBackUart = true; // Эту функцию Нужно отрабатывать в колбеке
+    printf("startContinuousSlow \n");
+    memset(_bufRead, 0, sizeof(_bufRead));                     // Очистка буфера
+    HAL_UART_DMAStop(&huart);                                  // Остановка DMA
+    status = HAL_UART_Receive_DMA(&huart, rx_bufferUART_, 13); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
+
+    uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x05, 0x00};
+    buf[8] = calcCs(buf, 9);
+    HAL_UART_Transmit(&huart, buf, sizeof(buf), 100); // Отправляем команду
+}
 // void sk60plus_setModulMeasureOffset(int16_t ZZYY_) // Function: master set slave’s measure offset. For example, if the offset 0xZZYY = 0x7B(+123) , it means the final output of measure result will PLUS 123 millimeters , if the offset 0xZZYY = 0xFF85(-123), it means the final output of measure result will MINUS 123 millimeters
 // {
 //     printf("setModulMeasureOffset \n");
@@ -583,25 +595,13 @@ void sk60plus_startContinuousAuto(UART_HandleTypeDef huart, uint8_t *rx_bufferUA
 // }
 
 // Расчет растояния на основе полученных данных
-uint32_t laser60_calcDistance(uint8_t *rx_bufferUART) 
+uint32_t laser60_calcDistance(uint8_t *rx_bufferUART)
 {
-    uint32_t distance = 0;
-    if (rx_bufferUART[0] == 0xAA)
-    {
-        distance = (uint32_t)(rx_bufferUART[9] | rx_bufferUART[6] << 24 | rx_bufferUART[7] << 16 | rx_bufferUART[8] << 8);
-        printf("Distance= %lu \r\n", distance);
-    }
-    return distance;
+    return (uint32_t)(rx_bufferUART[9] | rx_bufferUART[6] << 24 | rx_bufferUART[7] << 16 | rx_bufferUART[8] << 8);
 }
 // Расчет качества сигнала на основе полученных данных
-uint16_t laser60_calcSignalQuality(uint8_t *rx_bufferUART) 
+uint16_t laser60_calcSignalQuality(uint8_t *rx_bufferUART)
 {
-    uint16_t signalQuality = 0;
-    if (rx_bufferUART[0] == 0xAA)
-    {
-        signalQuality = (uint16_t)(rx_bufferUART[11] | rx_bufferUART[10] << 8);
-        printf("SignalQuality= %u  \r\n", signalQuality);
-    }
-    return signalQuality;
+    return (uint16_t)(rx_bufferUART[11] | rx_bufferUART[10] << 8);
 }
 #endif
