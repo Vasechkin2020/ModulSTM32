@@ -2,16 +2,14 @@
 #define MAIN_H
 
 // ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
-#define LASER80 yes
-// #define LASER60 yes
+// #define LASER80 yes
+#define LASER60 yes
 // #define LASER50 yes
 
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-
-
 
 #include "main.h"
 #include "dma.h"
@@ -53,55 +51,19 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART4_UART_Init();
-
-  printf("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
+  //printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
   MX_SPI1_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
-#ifdef LASER80
-
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Двнные оказываются в буфере rx_bufferUART1
-  HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Двнные оказываются в буфере rx_bufferUART1
-
-  laser80_Init();               // Инициализация лазеров
-                             // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
-  HAL_UART_DMAStop(&huart1); // Остановка DMA
-  HAL_UART_DMAStop(&huart2); // Остановка DMA
-  HAL_UART_DMAStop(&huart3); // Остановка DMA
-  HAL_UART_DMAStop(&huart4); // Остановка DMA
-
-  memset(rx_bufferUART1, 0, RX_BUFFER_SIZE); // Очистка буфера
-  memset(rx_bufferUART2, 0, RX_BUFFER_SIZE); // Очистка буфера
-  memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
-  memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
-
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-  HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
-#endif
-
-#ifdef LASER60
-  //HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-  // sk60plus_autoBaund(huart1);
-  // while (1)
-  // {
-  //   /* code */
-  // }
+  laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
   
-  laser60_Init();
-
-#endif
-
   //  // Запуск обмена данными по SPI с использованием DMA
   initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
   // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
-  printf("START2 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
+  printf("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
   initMotor(); // Начальная инициализация и настройка шаговых моторов
   //  testMotorRun();
@@ -116,8 +78,8 @@ int main(void)
 
   HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
+  printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
 
-  printf("LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
   while (1)
   {
     loop();

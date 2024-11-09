@@ -56,7 +56,6 @@
 #define laserEn_GPIO_Port GPIOD
 
 
-
 enum codeOperation // коды операций запросов по UART
 {
     No,  // нет операций
