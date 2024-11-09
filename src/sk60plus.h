@@ -45,9 +45,11 @@ at the same time, and no slave reply measure result until master ask one of them
 */
 
 extern HAL_StatusTypeDef status;
-uint8_t _addr = 0x00;        // Адрес датчика. Заполняем при инициализации
-uint8_t _bufRead[13];        // Буфер для чтения // Буфер для приема одиночного сообщения без цикла, а после небольшой задержки
-uint8_t const pinPwrEn = 22; // Пин на котором управляем включением/выключением датчиков
+extern bool flagCallBackUart;          // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
+//extern struct SDataLaser dataLaser[4]; // Структура куда пишем даные из датчиков
+uint8_t _addr = 0x00;                  // Адрес датчика. Заполняем при инициализации
+uint8_t _bufRead[13];                  // Буфер для чтения // Буфер для приема одиночного сообщения без цикла, а после небольшой задержки
+uint8_t const pinPwrEn = 22;           // Пин на котором управляем включением/выключением датчиков
 
 enum statusCode
 {
@@ -138,6 +140,9 @@ void sk60plus_getStatus();                 // Function: master read out the modu
 bool sk60plus_readStatus();        // Function: master read out the module’s status after previous command executed;
 bool sk60plus_readMeasureResult(); // Function: master read out the distance measugetesult;
 
+uint32_t laser60_calcDistance(uint8_t *rx_bufferUART); // Расчет растояния на основе полученных данных
+uint16_t laser60_calcSignalQuality(uint8_t *rx_bufferUART); // Расчет качества сигнала на основе полученных данных
+
 /* Master send out 1-shot measure commands to slave address 0x7F, that will make all online slaves to measure distance at the same time， but none of them will return its measure result to master until
 master ask each one to return the measure result. Before master send out the reading measure result command, master should read the slave’s status code to make sure there was no error occurred during    this slave measuring.
 After sending this command out, master polling each slave address for their status, if slave replies its status code with 0x0000, means no error, then send readMeasureResult() command to read back the
@@ -190,9 +195,11 @@ uint8_t calcCs(uint8_t *data_, uint8_t len_) // Расчет контрольн�
     // Serial.println(sum, BIN);
     return sum;
 }
+
 // Установка скорости обмена
 void sk60plus_autoBaund()
 {
+    flagCallBackUart = false;                             // Эту функцию Не нужно отпабатывать в колбеке
     HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 0); // Пин датчика PWREN
     HAL_Delay(100);
     HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, 1);
@@ -211,6 +218,7 @@ void sk60plus_autoBaund()
 // Function: master set slave’s address, this address will not lost after module power off; Slave address set to 0xYY (!!!Beware: address only take bit[6:0], other bits will be ignored).
 void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t addr_, uint8_t YY_)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("setModulAddress ->");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(&huart);                           // Остановка DMA
@@ -234,6 +242,7 @@ void sk60plus_setModulAddress(UART_HandleTypeDef huart, uint8_t addr_, uint8_t Y
 // Function: master read out the module’s HW version number;
 void sk60plus_readHardwareVersion(UART_HandleTypeDef huart)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readHardwareVersion -> ");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(&huart);                           // Остановка DMA
@@ -259,6 +268,7 @@ void sk60plus_readHardwareVersion(UART_HandleTypeDef huart)
 // Function: master read out the module’s SW version number;
 void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readSoftwareVersion -> ");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(&huart);                           // Остановка DMA
@@ -289,6 +299,7 @@ void sk60plus_readSoftwareVersion(UART_HandleTypeDef huart)
 // Function: master read out the module’s Serial number;
 void sk60plus_readSerialNumber(UART_HandleTypeDef huart)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readSerialNumber ->");
     memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
     HAL_UART_DMAStop(&huart);                            // Остановка DMA
@@ -324,6 +335,7 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef huart)
 // Function: master read out the module’s input voltage in mV with BCD encode;
 void sk60plus_readInputVoltage(UART_HandleTypeDef huart)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readInputVoltage -> ");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(&huart);                           // Остановка DMA
@@ -353,6 +365,7 @@ void sk60plus_readInputVoltage(UART_HandleTypeDef huart)
 // Function: turn on or turn off laser beam, if 0xZZ = 0x01 laser on, 0xZZ = 0x00 laser off.
 void sk60plus_setLaser(UART_HandleTypeDef huart, uint8_t ZZ_)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("setLaser -> ");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(&huart);                           // Остановка DMA
@@ -377,6 +390,7 @@ void sk60plus_setLaser(UART_HandleTypeDef huart, uint8_t ZZ_)
 // Function: Master transfer one uint8_t 0x58 (upper case character ‘X’) to stop continuous measure mode immediately
 void sk60plus_stopContinuous(UART_HandleTypeDef huart)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("stopContinuous = %0#6X \n", 0x58);
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(&huart);                           // Остановка DMA
@@ -391,6 +405,7 @@ void sk60plus_stopContinuous(UART_HandleTypeDef huart)
 // Function: Initiate slave to do 1-shot measure in Auto mode.
 void sk60plus_startSingleAuto(UART_HandleTypeDef huart)
 {
+    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("startSingleAuto \n");
     memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
     HAL_UART_DMAStop(&huart);                            // Остановка DMA
@@ -411,9 +426,10 @@ void sk60plus_startSingleAuto(UART_HandleTypeDef huart)
 // Function: Initiate slave to do 1-shot measure in Auto mode.
 void sk60plus_startContinuousAuto(UART_HandleTypeDef huart, uint8_t *rx_bufferUART_)
 {
+    flagCallBackUart = true; // Эту функцию Нужно отрабатывать в колбеке
     printf("startContinuousAuto \n");
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
-    HAL_UART_DMAStop(&huart);                            // Остановка DMA
+    memset(_bufRead, 0, sizeof(_bufRead));                     // Очистка буфера
+    HAL_UART_DMAStop(&huart);                                  // Остановка DMA
     status = HAL_UART_Receive_DMA(&huart, rx_bufferUART_, 13); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
 
     uint8_t buf[9] = {0xAA, _addr, 0x00, 0x20, 0x00, 0x01, 0x00, 0x06, 0x00};
@@ -565,4 +581,27 @@ void sk60plus_startContinuousAuto(UART_HandleTypeDef huart, uint8_t *rx_bufferUA
 //         return false;
 //     }
 // }
+
+// Расчет растояния на основе полученных данных
+uint32_t laser60_calcDistance(uint8_t *rx_bufferUART) 
+{
+    uint32_t distance = 0;
+    if (rx_bufferUART[0] == 0xAA)
+    {
+        distance = (uint32_t)(rx_bufferUART[9] | rx_bufferUART[6] << 24 | rx_bufferUART[7] << 16 | rx_bufferUART[8] << 8);
+        printf("Distance= %lu \r\n", distance);
+    }
+    return distance;
+}
+// Расчет качества сигнала на основе полученных данных
+uint16_t laser60_calcSignalQuality(uint8_t *rx_bufferUART) 
+{
+    uint16_t signalQuality = 0;
+    if (rx_bufferUART[0] == 0xAA)
+    {
+        signalQuality = (uint16_t)(rx_bufferUART[11] | rx_bufferUART[10] << 8);
+        printf("SignalQuality= %u  \r\n", signalQuality);
+    }
+    return signalQuality;
+}
 #endif

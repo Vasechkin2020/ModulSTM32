@@ -12,6 +12,8 @@ uint8_t rx_bufferUART2[RX_BUFFER_SIZE] = {0}; // Буфер для приема 
 uint8_t rx_bufferUART3[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 
+extern bool flagCallBackUart; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
+
 //     //*********************** ОБЬЯВЛЕНИЕ ФУНКЦИЙ *****************************************
 
 
@@ -20,7 +22,7 @@ uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_); // Расчет контр
 //     // Функции применимык к конкретному датчику, так как задается адрес датчика
 
 
-float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_);// Вычисление дистанции по полученному буферу или ошибка
+float laser80_calcDistance(uint8_t *rx_bufferUART, u_int8_t len_);// Вычисление дистанции по полученному буферу или ошибка
 void laser80_controlLaser(UART_HandleTypeDef huart, uint8_t status_, uint8_t addr_); // Управление лазером 1- Включен 0-Выключен
 
 void laser80_singleMeasurement(UART_HandleTypeDef huart, uint8_t addr_);     // Одиночное измерение примерно 800 милисекунд
@@ -184,7 +186,7 @@ void laser80_singleMeasurement(UART_HandleTypeDef huart, uint8_t addr_)
 }
 
 // Вычисление дистанции по полученному буферу или ошибка
-float calcDistance(uint8_t *rx_bufferUART, u_int8_t len_)
+float laser80_calcDistance(uint8_t *rx_bufferUART, u_int8_t len_)
 {
     float distance = 0;
     if (len_ == 11 && rx_bufferUART[3] != 0x45 && rx_bufferUART[4] != 0x52 && rx_bufferUART[5] != 0x52) // по кодам ASCII ERR
