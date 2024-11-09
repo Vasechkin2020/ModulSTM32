@@ -220,7 +220,7 @@ void sk60plus_setModulAddress(UART_HandleTypeDef *huart, uint8_t addr_, uint8_t 
 {
     flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("setModulAddress ->");
-    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));             // Очистка буфера
     HAL_UART_DMAStop(huart);                           // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
@@ -244,7 +244,7 @@ void sk60plus_readHardwareVersion(UART_HandleTypeDef *huart)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readHardwareVersion -> ");
-    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));             // Очистка буфера
     HAL_UART_DMAStop(huart);                           // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
@@ -270,7 +270,7 @@ void sk60plus_readSoftwareVersion(UART_HandleTypeDef *huart)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readSoftwareVersion -> ");
-    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));             // Очистка буфера
     HAL_UART_DMAStop(huart);                           // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
@@ -301,7 +301,7 @@ void sk60plus_readSerialNumber(UART_HandleTypeDef *huart)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readSerialNumber ->");
-    memset(_bufRead, 0, sizeof(_bufRead));               // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(huart);                            // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 11); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем. НЕПОНЯТНО ПОУЧЕМУ ВОЗВРАЩАЕТСЯ 11 байт, ПО ДОКУМЕНТАЦИИ 9
     printf("status= %i \r\n", status);
@@ -337,7 +337,7 @@ void sk60plus_readInputVoltage(UART_HandleTypeDef *huart)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отпабатывать в колбеке
     printf("readInputVoltage -> ");
-    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));             // Очистка буфера
     HAL_UART_DMAStop(huart);                           // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
@@ -367,7 +367,7 @@ void sk60plus_setLaser(UART_HandleTypeDef *huart, uint8_t ZZ_)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("setLaser -> ");
-    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));             // Очистка буфера
     HAL_UART_DMAStop(huart);                           // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 9); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
@@ -392,7 +392,7 @@ void sk60plus_stopContinuous(UART_HandleTypeDef *huart)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("stopContinuous = %0#6X \n", 0x58);
-    memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));             // Очистка буфера
     HAL_UART_DMAStop(huart);                           // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, _bufRead, 1); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("status= %i \r\n", status);
@@ -406,6 +406,8 @@ void sk60plus_stopContinuous(UART_HandleTypeDef *huart)
 void sk60plus_startSingleAuto(UART_HandleTypeDef *huart)
 {
     flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
+    _distance = 0;
+    _signalQuality = 0;
     printf("startSingleAuto \n");
     memset(_bufRead, 0, sizeof(_bufRead));              // Очистка буфера
     HAL_UART_DMAStop(huart);                            // Остановка DMA
@@ -437,7 +439,7 @@ void sk60plus_startContinuousAuto(UART_HandleTypeDef *huart, uint8_t *rx_bufferU
 {
     flagCallBackUart = true; // Эту функцию Нужно отрабатывать в колбеке
     printf("startContinuousAuto \n");
-    memset(_bufRead, 0, sizeof(_bufRead));                     // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));                    // Очистка буфера
     HAL_UART_DMAStop(huart);                                  // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, rx_bufferUART_, 13); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
 
@@ -450,7 +452,7 @@ void sk60plus_startContinuousSlow(UART_HandleTypeDef *huart, uint8_t *rx_bufferU
 {
     flagCallBackUart = true; // Эту функцию Нужно отрабатывать в колбеке
     printf("startContinuousSlow \n");
-    memset(_bufRead, 0, sizeof(_bufRead));                     // Очистка буфера
+    memset(_bufRead, 0, sizeof(_bufRead));                    // Очистка буфера
     HAL_UART_DMAStop(huart);                                  // Остановка DMA
     status = HAL_UART_Receive_DMA(huart, rx_bufferUART_, 13); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
 

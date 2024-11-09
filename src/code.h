@@ -26,9 +26,11 @@ void timer6();                                                             // О
 void workingTimer();                                                       // Отработка действий по таймеру в 1, 50, 60 милисекунд
 void workingLaser();                                                       // Отработка действий по лазерным датчикам
 void workingSPI();                                                         // Отработка действий по обмену по шине SPI
+void workingStopTimeOut();                                                 // Остановка дазеоров и моторов при обрыве связи
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size); // Коллбэк, вызываемый при событии UART Idle по окончания приема
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);                   // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
 void laserInit();                                                          // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
+bool flagTimeOut = true;                                                   // Флаг таймаута при обрыве связи по SPI
 
 struct dataUART
 {
@@ -310,20 +312,35 @@ void executeDataReceive()
     // Команда ВКЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
     if (Data2Modul_receive.controlLaser.mode == 1 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
+#ifdef LASER80
         // Непрерывное измерение
         laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
         laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
         laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
         laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
+#endif
+#ifdef LASER60
+        sk60plus_startContinuousSlow(&huart1, rx_bufferUART1);
+        sk60plus_startContinuousSlow(&huart2, rx_bufferUART2);
+        sk60plus_startContinuousSlow(&huart3, rx_bufferUART3);
+        sk60plus_startContinuousSlow(&huart4, rx_bufferUART4);
+#endif
     }
     // Команда ВЫЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
     if (Data2Modul_receive.controlLaser.mode == 0 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
-        // Непрерывное измерение
+#ifdef LASER80
         laser80_stopMeasurement(huart1, 0x80);
-        laser80_stopMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
-        laser80_stopMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
-        laser80_stopMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
+        laser80_stopMeasurement(huart2, 0x80);
+        laser80_stopMeasurement(huart3, 0x80);
+        laser80_stopMeasurement(huart4, 0x80);
+#endif
+#ifdef LASER60
+        sk60plus_stopContinuous(&huart1);
+        sk60plus_stopContinuous(&huart2);
+        sk60plus_stopContinuous(&huart3);
+        sk60plus_stopContinuous(&huart4);
+#endif
     }
 
     mode_pred = Data2Modul_receive.controlMotor.mode;  // Запоминаяем команду
@@ -426,8 +443,7 @@ void laserInit() // Инициализация лазеров в зависим�
     sk60plus_startSingleAuto(&huart2);
     sk60plus_startSingleAuto(&huart3);
 
-    sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
-    //sk60plus_startContinuousSlow(&huart1, rx_bufferUART1);
+    // sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
 
 #endif
 }
@@ -462,11 +478,11 @@ void workingLaser()
                 do
                 {
                     HAL_UART_DMAStop(dataUART[i].huart);
-                    memset(dataUART[i].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+                    memset(dataUART[i].adr, 0, RX_BUFFER_SIZE);                                      // Очистка буфера
                     status = HAL_UART_Receive_DMA(dataUART[i].huart, dataUART[i].adr, lenDataLaser); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-                    //printf("New status0 = %i ", status);
+                    // printf("New status0 = %i ", status);
                     HAL_Delay(1);
-                    
+
                 } while (status != 0);
                 printf("New status2 = %i\r\n", status);
             }
@@ -481,9 +497,8 @@ void workingSPI()
 #ifdef SPI_protocol
     if (flag_data) // Если обменялись данными
     {
-
         flag_data = false;
-        // workingSPI();
+        flagTimeOut = true; // Флаг для выключения по таймауту
         timeSpi = millis(); // Запоминаем время обмена
         // printf ("In = %#x %#x %#x %#x \r\n",rxBuffer[0],rxBuffer[1],rxBuffer[2],rxBuffer[3]);
         // printf ("Out = %#x %#x %#x %#x \r\n",txBuffer[0],txBuffer[1],txBuffer[2],txBuffer[3]);
@@ -502,30 +517,43 @@ void workingSPI()
     }
 #endif
 }
-
-void loop()
+// Остановка лазеров и моторов при обрыве связи
+void workingStopTimeOut()
 {
-    // HAL_Delay(); // Пауза 500 миллисекунд.
-    workingSPI();   // Отработка действий по обмену по шине SPI
-    workingLaser(); // Отработка действий по лазерным датчикам
-    workingTimer(); // Отработка действий по таймеру в 1, 50, 60 милисекунд
-
     // if (HAL_GetTick() - timeStart >= 10000)
     // {
     //     // laser80_stopMeasurement(0x80);
     // }
-    if (millis() - timeSpi > 3000) // Если обмена нет больше 5 секунд то отключаем все
+    if (flagTimeOut) // Если бы обмен
     {
-        // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-        // Data2Modul_receive.controlLaser.mode = 0;                        // Отключаем лазерные датчики
-        // Data2Modul_receive.controlMotor.mode = 0;                        // Отключаем моторы
-        // laser80_stopMeasurement(huart1,0x80);
-        // laser80_stopMeasurement(huart2,0x80);
-        // laser80_stopMeasurement(huart3,0x80);
-        // laser80_stopMeasurement(huart4,0x80);
-        // HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-        // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+        if (millis() - timeSpi > 3000) // Если обмена нет больше 5 секунд то отключаем все
+        {
+            flagTimeOut = false;
+            HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+// #ifdef LASER80
+//             laser80_stopMeasurement(huart1, 0x80);
+//             laser80_stopMeasurement(huart2, 0x80);
+//             laser80_stopMeasurement(huart3, 0x80);
+//             laser80_stopMeasurement(huart4, 0x80);
+// #endif
+// #ifdef LASER60
+//             sk60plus_stopContinuous(&huart1);
+//             sk60plus_stopContinuous(&huart2);
+//             sk60plus_stopContinuous(&huart3);
+//             sk60plus_stopContinuous(&huart4);
+// #endif
+            // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+            // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
+        }
     }
+}
+
+void loop()
+{
+    workingSPI();         // Отработка действий по обмену по шине SPI
+    workingLaser();       // Отработка действий по лазерным датчикам
+    workingTimer();       // Отработка действий по таймеру в 1, 50, 60 милисекунд
+    workingStopTimeOut(); // Остановка драйверов и моторов при обрыве связи
 }
 
 #endif /*CODE_H*/
