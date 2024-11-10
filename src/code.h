@@ -30,7 +30,6 @@ void workingStopTimeOut();                                                 // О
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size); // Коллбэк, вызываемый при событии UART Idle по окончания приема
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);                   // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
 void laserInit();                                                          // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
-bool flagTimeOut = true;                                                   // Флаг таймаута при обрыве связи по SPI
 
 struct dataUART
 {
@@ -40,6 +39,7 @@ struct dataUART
     uint32_t distance; // Дистанция по последнему хорошему измерению
     uint16_t quality;  // Качество сигнала
     float angle;       // Угол в котором находился мотор в момент когда пришли данные по измерению
+    uint32_t time;     // Время измерения от начала запуска программы
     uint8_t *adr;      // Адрес буфера
     UART_HandleTypeDef *huart;
 };
@@ -48,7 +48,13 @@ struct dataUART dataUART[4];
 uint8_t lenDataLaser; // Длинна полученных данных в буфере
 HAL_StatusTypeDef status;
 
+bool flagTimeOut = true;       // Флаг таймаута при обрыве связи по SPI
 bool flagCallBackUart = false; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
+
+extern float getAngle(int32_t _pulse); // Пересчет импульсов в градусы
+extern void setMotorAngle(int num, float _angle);
+extern void setZeroMotor();
+extern volatile uint32_t millisCounter;
 
 // typedef struct SDataLaser
 // {
@@ -57,10 +63,6 @@ bool flagCallBackUart = false; // Флаг для указания нужно л
 // } SDataLaser;
 
 // SDataLaser dataLaser[4]; // Структура куда пишем даные из датчиков
-
-int flagContinius = 0;
-
-extern volatile uint32_t millisCounter;
 
 //********************************* ФУНКЦИИ ***************************************************************************
 // Функция для возврата количества миллисекунд
@@ -169,8 +171,6 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
     // }
 }
 
-// int sss;
-
 // void HAL_UART_RxIdleCallback(UART_HandleTypeDef *huart) НЕ ЗАРАБОТАЛО, НЕТ ВЫЗОВА ПО idle НИГДЕ КРОМЕ 1 UART НЕ смог разобраться почему
 // {
 //     if (huart->Instance == USART2)
@@ -180,8 +180,6 @@ void ProcessReceivedData(uint8_t *data, uint16_t size)
 //         dataUART2.num = 2;
 //     }
 // }
-
-extern float getAngle(int32_t _pulse); // Пересчет импульсов в градусы
 
 // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -193,6 +191,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         {
             dataUART[0].flag = 1; // Обработка полученных данных
             dataUART[0].angle = getAngle(motor[0].position);
+            dataUART[0].time = millisCounter;
             status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser); // После обработки вновь запустить прием
             dataUART[0].status = status;
         }
@@ -200,6 +199,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         {
             dataUART[1].flag = 1; // Обработка полученных данных
             dataUART[1].angle = getAngle(motor[1].position);
+            dataUART[1].time = millisCounter;
             status = HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser); // После обработки вновь запустить прием
             dataUART[1].status = status;
         }
@@ -207,6 +207,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         {
             dataUART[2].flag = 1; // Обработка полученных данных
             dataUART[2].angle = getAngle(motor[2].position);
+            dataUART[2].time = millisCounter;
             status = HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser); // После обработки вновь запустить прием
             dataUART[2].status = status;
         }
@@ -214,6 +215,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         {
             dataUART[3].flag = 1; // Обработка полученных данных
             dataUART[3].angle = getAngle(motor[3].position);
+            dataUART[3].time = millisCounter;
             status = HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser); // После обработки вновь запустить прием
             dataUART[3].status = status;
         }
@@ -258,15 +260,17 @@ void collect_Data_for_Send()
             Modul2Data_send.laser[i].distance = (float)dataUART[i].distance;                   // * 0.001;          // Считываем измерение растояния и пересчитываем в метры !!!
             Modul2Data_send.laser[i].signalQuality = dataUART[i].quality;                      // Считываем качество сигнала измерение
             Modul2Data_send.laser[i].angle = (float)dataUART[i].angle;                         // Считываем угол в котором произвели измерение
+            Modul2Data_send.laser[i].time = dataUART[i].time;                                  // Считываем время в котором произвели измерение
             Modul2Data_send.laser[i].numPillar = Data2Modul_receive.controlMotor.numPillar[i]; // Переписываем номер столба на который измеряли расстояние
         }
         else
         {
-            Modul2Data_send.laser[i].status = 0;        // Считываем статаус дальномера
-            Modul2Data_send.laser[i].distance = 0;      // Считываем измерение растояния и пересчитываем в метры !!!
-            Modul2Data_send.laser[i].signalQuality = 0; // Считываем угол в котором произмели измерение
-            Modul2Data_send.laser[i].angle = 0;         // Считываем угол в котором произвели измерение
-            Modul2Data_send.laser[i].numPillar = -1;    // Переписываем номер столба на который измеряли расстояние
+            Modul2Data_send.laser[i].status = 0;              // Считываем статаус дальномера
+            Modul2Data_send.laser[i].distance = 0;            // Считываем измерение растояния и пересчитываем в метры !!!
+            Modul2Data_send.laser[i].signalQuality = 0;       // Считываем угол в котором произмели измерение
+            Modul2Data_send.laser[i].angle = 0;               // Считываем угол в котором произвели измерение
+            Modul2Data_send.laser[i].time = dataUART[i].time; // Считываем время в котором произвели измерение
+            Modul2Data_send.laser[i].numPillar = -1;          // Переписываем номер столба на который измеряли расстояние
         }
     }
 
@@ -281,9 +285,6 @@ void collect_Data_for_Send()
     Modul2Data_send.cheksum = cheksum_send;
     // Modul2Data_send.cheksum = measureCheksum_Modul2Data(Modul2Data_send); // Вычисляем контрольную сумму структуры и пишем ее значение в последний элемент
 }
-
-extern void setMotorAngle(int num, float _angle);
-extern void setZeroMotor();
 
 // Отработка пришедших команд. Изменение скорости, траектории и прочее
 void executeDataReceive()
@@ -324,6 +325,15 @@ void executeDataReceive()
         sk60plus_startContinuousSlow(&huart2, rx_bufferUART2);
         sk60plus_startContinuousSlow(&huart3, rx_bufferUART3);
         sk60plus_startContinuousSlow(&huart4, rx_bufferUART4);
+#endif
+    }
+    if (Data2Modul_receive.controlLaser.mode == 2 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
+    {
+#ifdef LASER60
+        sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
+        sk60plus_startContinuousAuto(&huart2, rx_bufferUART2);
+        sk60plus_startContinuousAuto(&huart3, rx_bufferUART3);
+        sk60plus_startContinuousAuto(&huart4, rx_bufferUART4);
 #endif
     }
     // Команда ВЫЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
@@ -408,10 +418,10 @@ void laserInit() // Инициализация лазеров в зависим�
     HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
     HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
     HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
-    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11);                     // Данные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Данные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Данные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART1
+    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART2
+    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART3
+    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART4
 
     sk60plus_autoBaund();
 
@@ -530,18 +540,18 @@ void workingStopTimeOut()
         {
             flagTimeOut = false;
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-// #ifdef LASER80
-//             laser80_stopMeasurement(huart1, 0x80);
-//             laser80_stopMeasurement(huart2, 0x80);
-//             laser80_stopMeasurement(huart3, 0x80);
-//             laser80_stopMeasurement(huart4, 0x80);
-// #endif
-// #ifdef LASER60
-//             sk60plus_stopContinuous(&huart1);
-//             sk60plus_stopContinuous(&huart2);
-//             sk60plus_stopContinuous(&huart3);
-//             sk60plus_stopContinuous(&huart4);
-// #endif
+                                                                               // #ifdef LASER80
+                                                                               //             laser80_stopMeasurement(huart1, 0x80);
+                                                                               //             laser80_stopMeasurement(huart2, 0x80);
+                                                                               //             laser80_stopMeasurement(huart3, 0x80);
+                                                                               //             laser80_stopMeasurement(huart4, 0x80);
+                                                                               // #endif
+                                                                               // #ifdef LASER60
+                                                                               //             sk60plus_stopContinuous(&huart1);
+                                                                               //             sk60plus_stopContinuous(&huart2);
+                                                                               //             sk60plus_stopContinuous(&huart3);
+                                                                               //             sk60plus_stopContinuous(&huart4);
+                                                                               // #endif
             // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
             // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
         }
