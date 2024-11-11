@@ -35,7 +35,7 @@ struct dataUART
 {
     uint8_t flag;      // Флаг готовности данных
     uint8_t num;       // Номер UART
-    uint8_t status;    // Статус данных
+    uint32_t status;    // Статус данных
     uint8_t statusDMA; // Статус вызова нового DMA
     uint32_t distance; // Дистанция по последнему хорошему измерению
     uint16_t quality;  // Качество сигнала

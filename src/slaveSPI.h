@@ -14,7 +14,7 @@ u_int64_t timeSpi = 0; // Время когда пришла команда по
 extern SPI_HandleTypeDef hspi1;
 volatile bool flag_data = false; // Флаг что данные передались
 
-#define BUFFER_SIZE 168 // Размер буфера который передаем. Следить что-бы структуры не превышали этот размер Кратно 32 делать
+#define BUFFER_SIZE 184 // Размер буфера который передаем. Следить что-бы структуры не превышали этот размер Кратно 32 делать
 // uint8_t txBuffer[BUFFER_SIZE] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xA0}; // = "Hello from STM32 Slave"; // Передающий буфер
 uint8_t txBuffer[BUFFER_SIZE] = {0}; // = "Hello from STM32 Slave"; // Передающий буфер
 uint8_t rxBuffer[BUFFER_SIZE];       // Принимающий буфер
