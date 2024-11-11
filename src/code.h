@@ -35,7 +35,8 @@ struct dataUART
 {
     uint8_t flag;      // Флаг готовности данных
     uint8_t num;       // Номер UART
-    uint8_t status;    // Номер UART
+    uint8_t status;    // Статус данных
+    uint8_t statusDMA; // Статус вызова нового DMA
     uint32_t distance; // Дистанция по последнему хорошему измерению
     uint16_t quality;  // Качество сигнала
     float angle;       // Угол в котором находился мотор в момент когда пришли данные по измерению
@@ -189,35 +190,27 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
         if (huart->Instance == USART1)
         {
-            dataUART[0].flag = 1; // Обработка полученных данных
-            dataUART[0].angle = getAngle(motor[0].position);
-            dataUART[0].time = millisCounter;
+            dataUART[0].flag = 1;                                                 // Обработка полученных данных
             status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[0].status = status;
+            dataUART[0].statusDMA = status;
         }
         else if (huart->Instance == USART2)
         {
-            dataUART[1].flag = 1; // Обработка полученных данных
-            dataUART[1].angle = getAngle(motor[1].position);
-            dataUART[1].time = millisCounter;
+            dataUART[1].flag = 1;                                                 // Обработка полученных данных
             status = HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[1].status = status;
+            dataUART[1].statusDMA = status;
         }
         else if (huart->Instance == USART3)
         {
-            dataUART[2].flag = 1; // Обработка полученных данных
-            dataUART[2].angle = getAngle(motor[2].position);
-            dataUART[2].time = millisCounter;
+            dataUART[2].flag = 1;                                                 // Обработка полученных данных
             status = HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[2].status = status;
+            dataUART[2].statusDMA = status;
         }
         else if (huart->Instance == USART4)
         {
-            dataUART[3].flag = 1; // Обработка полученных данных
-            dataUART[3].angle = getAngle(motor[3].position);
-            dataUART[3].time = millisCounter;
+            dataUART[3].flag = 1;                                                 // Обработка полученных данных
             status = HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[3].status = status;
+            dataUART[3].statusDMA = status;
         }
     }
 }
@@ -265,12 +258,12 @@ void collect_Data_for_Send()
         }
         else
         {
-            Modul2Data_send.laser[i].status = 0;              // Считываем статаус дальномера
-            Modul2Data_send.laser[i].distance = 0;            // Считываем измерение растояния и пересчитываем в метры !!!
-            Modul2Data_send.laser[i].signalQuality = 0;       // Считываем угол в котором произмели измерение
-            Modul2Data_send.laser[i].angle = 0;               // Считываем угол в котором произвели измерение
-            Modul2Data_send.laser[i].time = dataUART[i].time; // Считываем время в котором произвели измерение
-            Modul2Data_send.laser[i].numPillar = -1;          // Переписываем номер столба на который измеряли расстояние
+            Modul2Data_send.laser[i].status = 888;        // Статус не работаем с датчиком
+            Modul2Data_send.laser[i].distance = 0;      
+            Modul2Data_send.laser[i].signalQuality = 0; 
+            Modul2Data_send.laser[i].angle = 0;         
+            Modul2Data_send.laser[i].time = 0;         
+            Modul2Data_send.laser[i].numPillar = -1;    // Номер не существующего столба
         }
     }
 
@@ -473,13 +466,21 @@ void workingLaser()
 #ifdef LASER60
             if (dataUART[i].adr[0] == 0xAA) // Если ответ без ошибки то
             {
+                dataUART[i].status = 0; //Статус все хорошо
                 dataUART[i].distance = laser60_calcDistance(dataUART[i].adr);
                 dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
+                dataUART[i].angle = getAngle(motor[i].position);
+                dataUART[i].time = millisCounter;
                 printf(" UART%i distance = %lu signalQuality = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {
-                printf("%li UART%i status= %i   /   ", millis(), dataUART[i].num, dataUART[i].status);
+                dataUART[i].status = 999; // Статус ошибка
+                dataUART[i].distance = 0;
+                dataUART[i].quality = 0;
+                dataUART[i].angle = 0;
+                dataUART[i].time = 0;
+                printf("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
                 for (int j = 0; j < lenDataLaser; j++)
                 {
                     printf("%x ", dataUART[i].adr[j]);
@@ -494,7 +495,7 @@ void workingLaser()
                     HAL_Delay(1);
 
                 } while (status != 0);
-                printf("New status2 = %i\r\n", status);
+                printf("New statusDMA = %i\r\n", status);
             }
 #endif
         }

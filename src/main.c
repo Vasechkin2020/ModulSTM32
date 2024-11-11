@@ -13,6 +13,7 @@
 
 #include "main.h"
 #include "dma.h"
+#include "i2c.h"
 #include "usart.h"
 #include "spi.h"
 
@@ -54,6 +55,7 @@ int main(void)
   //printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
   MX_SPI1_Init();
+  MX_I2C1_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
