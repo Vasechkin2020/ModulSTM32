@@ -97,10 +97,10 @@ void laser80_Init()
     HAL_Delay(1000);
 
     // Непрерывное измерение
-    laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
-    laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
-    laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
-    laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(huart2, 0x80); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(huart3, 0x80); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(huart4, 0x80); // Данные пойдут только через 500 милисекунд
 
     // HAL_Delay(5000);
     // laser80_stopMeasurement(huart1,0x80);
@@ -134,7 +134,7 @@ void laser80_setAddress(UART_HandleTypeDef huart, uint8_t addr_)
     buf[4] = lazer80_calcCs(buf, 5);
     HAL_UART_Transmit(&huart, buf, sizeof(buf), 100);
     HAL_Delay(50); // Задержка на время ожидания ответа и сразу разбираем ответ который будет в буфере который указали для ожмдания прерывания по DMA
-    printf("setAddress DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
+    //printf("setAddress DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
     if (rx_bufferUART1[0] == 0xFA && rx_bufferUART1[1] == 0x04 && rx_bufferUART1[2] == 0x81 && rx_bufferUART1[3] == 0x81)
     {
         // printf("setAddress ok \n");
@@ -300,15 +300,15 @@ bool laser80_setTimeInterval(UART_HandleTypeDef huart, uint8_t data_)
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = TimeInterval;
 
-    printf("setTimeInterval DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
+    //printf("setTimeInterval DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
     if (rx_bufferUART1[0] == 0xFA && rx_bufferUART1[1] == 0x04 && rx_bufferUART1[2] == 0x85 && rx_bufferUART1[3] == 0x7D)
     {
-        printf("setTimeInterval ok \n");
+        //printf("setTimeInterval ok \n");
         return true;
     }
     else
     {
-        printf("setTimeInterval ERROR\n");
+        //printf("setTimeInterval ERROR\n");
         return false;
     }
 }
@@ -366,16 +366,16 @@ bool laser80_setStartingPoint(UART_HandleTypeDef huart, uint8_t data_)
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
     codeOperationUART1 = StartPoint;
-    printf("setAddress DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
+    //printf("setAddress DATA => %X %X %X %X %X\n", rx_bufferUART1[0], rx_bufferUART1[1], rx_bufferUART1[2], rx_bufferUART1[3], rx_bufferUART1[4]);
 
     if (rx_bufferUART1[0] == 0xFA && rx_bufferUART1[1] == 0x04 && rx_bufferUART1[2] == 0x88 && rx_bufferUART1[3] == 0x7A)
     {
-        printf("setStartingPoint ok \n");
+        // printf("setStartingPoint ok \n");
         return true;
     }
     else
     {
-        printf("setStartingPoint ERROR \n");
+        // printf("setStartingPoint ERROR \n");
         return false;
     }
 }

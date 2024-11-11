@@ -317,7 +317,7 @@ void executeDataReceive()
         sk60plus_startContinuousSlow(&huart1, rx_bufferUART1);
         sk60plus_startContinuousSlow(&huart2, rx_bufferUART2);
         sk60plus_startContinuousSlow(&huart3, rx_bufferUART3);
-        sk60plus_startContinuousSlow(&huart4, rx_bufferUART4);
+        // sk60plus_startContinuousSlow(&huart4, rx_bufferUART4);
 #endif
     }
     if (Data2Modul_receive.controlLaser.mode == 2 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
@@ -326,7 +326,7 @@ void executeDataReceive()
         sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
         sk60plus_startContinuousAuto(&huart2, rx_bufferUART2);
         sk60plus_startContinuousAuto(&huart3, rx_bufferUART3);
-        sk60plus_startContinuousAuto(&huart4, rx_bufferUART4);
+        // sk60plus_startContinuousAuto(&huart4, rx_bufferUART4);
 #endif
     }
     // Команда ВЫЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
@@ -342,7 +342,7 @@ void executeDataReceive()
         sk60plus_stopContinuous(&huart1);
         sk60plus_stopContinuous(&huart2);
         sk60plus_stopContinuous(&huart3);
-        sk60plus_stopContinuous(&huart4);
+        // sk60plus_stopContinuous(&huart4);
 #endif
     }
 
@@ -374,16 +374,17 @@ void laserInit() // Инициализация лазеров в зависим�
     lenDataLaser = 11;
 
     HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
+    HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
+    HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
+    HAL_UART_DMAStop(&huart4);                                             // Остановка DMA 
+    
+    HAL_UART_Receive_DMA(&huart1, rx_bufferUART2, 11);                     // Двнные оказываются в буфере rx_bufferUART1
     HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Двнные оказываются в буфере rx_bufferUART1
     HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Двнные оказываются в буфере rx_bufferUART1
     HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Двнные оказываются в буфере rx_bufferUART1
 
     laser80_Init(); // Инициализация лазеров
-
-    sk60plus_autoBaund(huart1);
-    sk60plus_autoBaund(huart2);
-    sk60plus_autoBaund(huart3);
-    sk60plus_autoBaund(huart4);
 
     // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
     HAL_UART_DMAStop(&huart1); // Остановка DMA
@@ -396,7 +397,8 @@ void laserInit() // Инициализация лазеров в зависим�
     memset(rx_bufferUART3, 0, RX_BUFFER_SIZE); // Очистка буфера
     memset(rx_bufferUART4, 0, RX_BUFFER_SIZE); // Очистка буфера
 
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+    //HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
+    HAL_UART_Receive_DMA(&huart1, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
     HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
     HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
     HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11);                     // Данные оказываются в буфере rx_bufferUART1//  // Перезапуск приема данных через DMA
@@ -406,45 +408,50 @@ void laserInit() // Инициализация лазеров в зависим�
 #ifdef LASER60
 
     lenDataLaser = 13;
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ
-    HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
-    HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
-    HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
-    HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
-    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART2
-    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART3
-    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART4
+    // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ
+    HAL_UARTEx_ReceiveToIdle_IT(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ
 
     sk60plus_autoBaund();
 
+    HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
+    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART1
     sk60plus_setLaser(&huart1, 1);
-    sk60plus_setLaser(&huart2, 1);
-    sk60plus_setLaser(&huart3, 1);
-
     sk60plus_readSerialNumber(&huart1);
-    sk60plus_readSerialNumber(&huart2);
-    sk60plus_readSerialNumber(&huart3);
-
     sk60plus_readSoftwareVersion(&huart1);
-    sk60plus_readSoftwareVersion(&huart2);
-    sk60plus_readSoftwareVersion(&huart3);
-
     sk60plus_readHardwareVersion(&huart1);
-    sk60plus_readHardwareVersion(&huart2);
-    sk60plus_readHardwareVersion(&huart3);
-
     sk60plus_readInputVoltage(&huart1);
-    sk60plus_readInputVoltage(&huart2);
-    sk60plus_readInputVoltage(&huart3);
-
     sk60plus_setLaser(&huart1, 0);
-    sk60plus_setLaser(&huart2, 0);
-    sk60plus_setLaser(&huart3, 0);
-
     sk60plus_startSingleAuto(&huart1);
+
+    HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
+    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART2
+    sk60plus_setLaser(&huart2, 1);
+    sk60plus_readSerialNumber(&huart2);
+    sk60plus_readSoftwareVersion(&huart2);
+    sk60plus_readHardwareVersion(&huart2);
+    sk60plus_readInputVoltage(&huart2);
+    sk60plus_setLaser(&huart2, 0);
     sk60plus_startSingleAuto(&huart2);
+
+    HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
+    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART3
+    sk60plus_setLaser(&huart3, 1);
+    sk60plus_readSerialNumber(&huart3);
+    sk60plus_readSoftwareVersion(&huart3);
+    sk60plus_readHardwareVersion(&huart3);
+    sk60plus_readInputVoltage(&huart3);
+    sk60plus_setLaser(&huart3, 0);
     sk60plus_startSingleAuto(&huart3);
+
+    // HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
+    // HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART4
+    // sk60plus_setLaser(&huart4, 1);
+    // sk60plus_readSerialNumber(&huart4);
+    // sk60plus_readSoftwareVersion(&huart4);
+    // sk60plus_readHardwareVersion(&huart4);
+    // sk60plus_readInputVoltage(&huart4);
+    // sk60plus_setLaser(&huart4, 0);
+    // sk60plus_startSingleAuto(&huart4);
 
     // sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
 
@@ -471,7 +478,7 @@ void workingLaser()
                 dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
                 dataUART[i].angle = getAngle(motor[i].position);
                 dataUART[i].time = millisCounter;
-                printf(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+                // printf(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {

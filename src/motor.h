@@ -64,7 +64,7 @@ void setSpeedMotor(float _speed)
     // Микросекунды в секунде делим на число шагов которые надо успеть сделать за секунду и делим на микрошаги делим на микросекунды за 1 шаг с учетом предделителя таймера
     timeingStep = (float)1000000 / step_za_sec; // Таймер по 1 микросекунде
     Set_Timer7_Period(timeingStep);             //  Устаналиваем время на таймере
-    printf("timeingStep= %i microsecond \n", timeingStep);
+    // printf("timeingStep= %i microsecond \n", timeingStep);
     //  delay(100);
     HAL_Delay(100); // Пауза 100 миллисекунд.
 }
@@ -116,7 +116,7 @@ void initMotor()
     motor[2].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[3].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
 
-    HAL_Delay(100);
+    // HAL_Delay(100);
 }
 
 // Функция для изменения периода таймера TIM7

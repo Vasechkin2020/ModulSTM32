@@ -53,22 +53,23 @@ int main(void)
   //printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
   MX_SPI1_Init();
-  MX_I2C1_Init();
+  // MX_I2C1_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
   
+  
   laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
   
+  initMotor(); // Начальная инициализация и настройка шаговых моторов
+  setZeroMotor(); // Установка в ноль
   //  // Запуск обмена данными по SPI с использованием DMA
   initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
   // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
-  printf("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
+  // printf("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
-  initMotor(); // Начальная инициализация и настройка шаговых моторов
   //  testMotorRun();
-  setZeroMotor(); // Установка в ноль
 
   // int a = 0;
   // int b = 2;
@@ -79,7 +80,7 @@ int main(void)
 
   HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
-  printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
+  // printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
 
   while (1)
   {
