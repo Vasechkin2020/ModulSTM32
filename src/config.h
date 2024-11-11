@@ -140,6 +140,20 @@ struct SSpi
 };
 struct SSpi spi; // Переменная где все данные по обмену
 
+struct SXyz // 
+{
+  float x;  
+  float y;  
+  float z; 
+};
+
+struct SMpu // Структура с данными со всех датчиков, отправляем наверх
+{
+  int32_t status; // статус состояния
+  struct SXyz angleEuler;
+  struct SXyz linear;
+};
+
 // Структура в которой все главные переменные передаюся на высокий уровень от Modul к Data
 struct Struct_Modul2Data
 {
@@ -150,13 +164,14 @@ struct Struct_Modul2Data
   struct SLaserSend laser[4]; // Структура по состоянию лазеров
   uint32_t statusDataLaser;   // Статус обновления данных с лазерных датчиков
   uint32_t micric[4];         // Структура по состоянию концевиков
+  struct SMpu bno055;      // Данные с датчика BNO055
   struct SSpi spi;            // Структура по состоянию обмена по шине SPI
 
   uint32_t cheksum; // Контрольная сумма данных в структуре
 };
 
 struct Struct_Modul2Data Modul2Data_send; // Тут все переменные его характеризующие на низком уровне
-// const int size_structura_send2 = sizeof(Modul2Data_send);                                                                       // Размер структуры с данными которые передаем
+//const int size_structura_send2 = sizeof(Modul2Data_send);                                                                       // Размер структуры с данными которые передаем
 // const uint16_t max_size_stuct = (size_structura_receive < size_structura_send) ? size_structura_send : size_structura_receive; // Какая из структур больше
 
 #endif
