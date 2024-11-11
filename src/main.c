@@ -1,6 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
-//ver 1.0
+//ver 1.1
 // ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
 // #define LASER80 yes
 #define LASER60 yes
