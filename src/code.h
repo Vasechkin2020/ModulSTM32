@@ -35,7 +35,7 @@ struct dataUART
 {
     uint8_t flag;      // Флаг готовности данных
     uint8_t num;       // Номер UART
-    uint32_t status;    // Статус данных
+    uint32_t status;   // Статус данных
     uint8_t statusDMA; // Статус вызова нового DMA
     uint32_t distance; // Дистанция по последнему хорошему измерению
     uint16_t quality;  // Качество сигнала
@@ -258,12 +258,12 @@ void collect_Data_for_Send()
         }
         else
         {
-            Modul2Data_send.laser[i].status = 888;        // Статус не работаем с датчиком
-            Modul2Data_send.laser[i].distance = 0;      
-            Modul2Data_send.laser[i].signalQuality = 0; 
-            Modul2Data_send.laser[i].angle = 0;         
-            Modul2Data_send.laser[i].time = 0;         
-            Modul2Data_send.laser[i].numPillar = -1;    // Номер не существующего столба
+            Modul2Data_send.laser[i].status = 888; // Статус не работаем с датчиком
+            Modul2Data_send.laser[i].distance = 0;
+            Modul2Data_send.laser[i].signalQuality = 0;
+            Modul2Data_send.laser[i].angle = 0;
+            Modul2Data_send.laser[i].time = 0;
+            Modul2Data_send.laser[i].numPillar = -1; // Номер не существующего столба
         }
     }
 
@@ -466,12 +466,12 @@ void workingLaser()
 #ifdef LASER60
             if (dataUART[i].adr[0] == 0xAA) // Если ответ без ошибки то
             {
-                dataUART[i].status = 0; //Статус все хорошо
+                dataUART[i].status = 0; // Статус все хорошо
                 dataUART[i].distance = laser60_calcDistance(dataUART[i].adr);
                 dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
                 dataUART[i].angle = getAngle(motor[i].position);
                 dataUART[i].time = millisCounter;
-                printf(" UART%i distance = %lu signalQuality = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+                printf(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {
@@ -541,18 +541,18 @@ void workingStopTimeOut()
         {
             flagTimeOut = false;
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-                                                                               // #ifdef LASER80
-                                                                               //             laser80_stopMeasurement(huart1, 0x80);
-                                                                               //             laser80_stopMeasurement(huart2, 0x80);
-                                                                               //             laser80_stopMeasurement(huart3, 0x80);
-                                                                               //             laser80_stopMeasurement(huart4, 0x80);
-                                                                               // #endif
-                                                                               // #ifdef LASER60
-                                                                               //             sk60plus_stopContinuous(&huart1);
-                                                                               //             sk60plus_stopContinuous(&huart2);
-                                                                               //             sk60plus_stopContinuous(&huart3);
-                                                                               //             sk60plus_stopContinuous(&huart4);
-                                                                               // #endif
+#ifdef LASER80
+            laser80_stopMeasurement(huart1, 0x80);
+            laser80_stopMeasurement(huart2, 0x80);
+            laser80_stopMeasurement(huart3, 0x80);
+            laser80_stopMeasurement(huart4, 0x80);
+#endif
+#ifdef LASER60
+            sk60plus_stopContinuous(&huart1);
+            sk60plus_stopContinuous(&huart2);
+            sk60plus_stopContinuous(&huart3);
+            sk60plus_stopContinuous(&huart4);
+#endif
             // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
             // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
         }
