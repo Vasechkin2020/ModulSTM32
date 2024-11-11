@@ -2,9 +2,7 @@
 #define MAIN_H
 //ver 1.1
 // ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
-// #define LASER80 yes
-#define LASER60 yes
-// #define LASER50 yes
+
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -60,6 +58,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
+  
   laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
   
   //  // Запуск обмена данными по SPI с использованием DMA

@@ -17,7 +17,12 @@ void MX_USART1_UART_Init(void)
 {
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
+#ifdef LASER80
   huart1.Init.BaudRate = 9600;
+#endif
+#ifdef LASER60
+  huart1.Init.BaudRate = 19200;
+#endif
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -52,7 +57,12 @@ void MX_USART1_UART_Init(void)
 void MX_USART2_UART_Init(void)
 {
   huart2.Instance = USART2;
+#ifdef LASER80
   huart2.Init.BaudRate = 9600;
+#endif
+#ifdef LASER60
+  huart2.Init.BaudRate = 115200;
+#endif
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -85,7 +95,12 @@ void MX_USART2_UART_Init(void)
 void MX_USART3_UART_Init(void)
 {
   huart3.Instance = USART3;
+#ifdef LASER80
   huart3.Init.BaudRate = 9600;
+#endif
+#ifdef LASER60
+  huart3.Init.BaudRate = 115200;
+#endif
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
@@ -106,8 +121,12 @@ void MX_USART3_UART_Init(void)
 void MX_USART4_UART_Init(void)
 {
   huart4.Instance = USART4;
-  // huart4.Init.BaudRate = 9600;
+#ifdef LASER80
+  huart4.Init.BaudRate = 9600;
+#endif
+#ifdef LASER60
   huart4.Init.BaudRate = 115200;
+#endif
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;

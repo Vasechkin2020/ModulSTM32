@@ -247,7 +247,7 @@ void collect_Data_for_Send()
     for (int i = 0; i < 4; i++) // Информация по лазерам по ситуации
     {
 
-        if (Data2Modul_receive.controlLaser.mode == 1) // Если команда работать с датчиком
+        if (Data2Modul_receive.controlLaser.mode != 0) // Если команда работать с датчиком
         {
             Modul2Data_send.laser[i].status = dataUART[i].status;                              // Считываем статаус дальномера
             Modul2Data_send.laser[i].distance = (float)dataUART[i].distance;                   // * 0.001;          // Считываем измерение растояния и пересчитываем в метры !!!
