@@ -1,8 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
-//ver 1.1
-// ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
-
+// ver 1.1
+//  ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -33,7 +32,6 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
   /* Configure the system clock */
   SystemClock_Config();
 
@@ -50,19 +48,29 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART4_UART_Init();
-  //printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
+  printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
+  // HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11); // Двнные оказываются в буфере rx_bufferUART1
+  // HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11); // Двнные оказываются в буфере rx_bufferUART1
+  // HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // Двнные оказываются в буфере rx_bufferUART1
+  // HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // Двнные оказываются в буфере rx_bufferUART1
+  
   MX_SPI1_Init();
   // MX_I2C1_Init();
+
+  // printf ("dfsdfsd=");
+  // printf ("dfsdfsd= %i \r\n",a);
+  // HAL_Delay(999);
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
-  
-  
+
+  // HAL_Delay(999);
+
   laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
-  
-  initMotor(); // Начальная инициализация и настройка шаговых моторов
+
+  initMotor();    // Начальная инициализация и настройка шаговых моторов
   setZeroMotor(); // Установка в ноль
   //  // Запуск обмена данными по SPI с использованием DMA
   initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
