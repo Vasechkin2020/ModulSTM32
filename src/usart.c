@@ -13,9 +13,9 @@ DMA_HandleTypeDef hdma_usart3_rx;
 UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_usart4_rx;
 
+/* USART1 init function */
 void MX_USART1_UART_Init(void)
 {
-  /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
 #ifdef LASER80
   huart1.Init.BaudRate = 9600;
@@ -36,20 +36,6 @@ void MX_USART1_UART_Init(void)
   {
     Error_Handler();
   }
-
-  // if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
-  // if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
-  // if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
-
   __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
@@ -76,18 +62,6 @@ void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
-  // if (HAL_UARTEx_SetTxFifoThreshold(&huart2, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
-  // if (HAL_UARTEx_SetRxFifoThreshold(&huart2, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
-  // if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
   __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
@@ -126,7 +100,7 @@ void MX_USART4_UART_Init(void)
   huart4.Init.BaudRate = 921600;
 #endif
 #ifdef LASER60
-  //huart4.Init.BaudRate = 115200;
+  // huart4.Init.BaudRate = 115200;
   huart4.Init.BaudRate = 921600;
 #endif
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
@@ -236,6 +210,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     }
 
     __HAL_LINKDMA(uartHandle, hdmarx, hdma_usart2_rx);
+
+    /* USART2 interrupt Init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
   }
   else if (uartHandle->Instance == USART3)
   {
@@ -279,6 +257,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     }
 
     __HAL_LINKDMA(uartHandle, hdmarx, hdma_usart3_rx);
+        /* USART3 interrupt Init */
+    HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_4_IRQn);
   }
   else if (uartHandle->Instance == USART4)
   {
@@ -314,6 +295,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     }
 
     __HAL_LINKDMA(uartHandle, hdmarx, hdma_usart4_rx);
+        /* USART4 interrupt Init */
+    HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_4_IRQn);
   }
 }
 
@@ -330,12 +314,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
     PC5     ------> USART1_RX
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_4 | GPIO_PIN_5);
-
-    /* USART1 DMA DeInit */
-    HAL_DMA_DeInit(uartHandle->hdmarx);
-
-    /* USART1 interrupt Deinit */
-    HAL_NVIC_DisableIRQ(USART1_IRQn);
+    HAL_DMA_DeInit(uartHandle->hdmarx); /* USART1 DMA DeInit */
+    HAL_NVIC_DisableIRQ(USART1_IRQn);   /* USART1 interrupt Deinit */
   }
   else if (uartHandle->Instance == USART2)
   {
@@ -347,9 +327,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
     PA3     ------> USART2_RX
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2 | GPIO_PIN_3);
-
-    /* USART2 DMA DeInit */
-    HAL_DMA_DeInit(uartHandle->hdmarx);
+    HAL_DMA_DeInit(uartHandle->hdmarx); /* USART2 DMA DeInit */
+    HAL_NVIC_DisableIRQ(USART2_IRQn);   /* USART2 interrupt Deinit */
   }
   else if (uartHandle->Instance == USART3)
   {
@@ -361,11 +340,11 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
     PA5     ------> USART3_TX
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_11);
-
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5);
 
     /* USART3 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmarx);
+    HAL_NVIC_DisableIRQ(USART3_4_IRQn); // Общее прерывание на 3 и 4 USART. Если отключить одно то и второе выключиться.
   }
   else if (uartHandle->Instance == USART4)
   {
@@ -380,5 +359,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
 
     /* USART4 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmarx);
+    HAL_NVIC_DisableIRQ(USART3_4_IRQn); // Общее прерывание на 3 и 4 USART. Если отключить одно то и второе выключиться.
   }
 }

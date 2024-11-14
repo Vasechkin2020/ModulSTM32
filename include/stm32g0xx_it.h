@@ -25,7 +25,9 @@ void DMA1_Channel1_IRQHandler(void); //SPI
 void DMA1_Channel2_3_IRQHandler(void);
 void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler(void);
 
-void USART1_IRQHandler(void); // Шлобальное прерывание. Не использую, потом отключить
+void USART1_IRQHandler(void); // Глобальное прерывание.
+void USART2_IRQHandler(void); // Глобальное прерывание.
+void USART3_4_IRQHandler(void);
 
 #ifdef __cplusplus
 }

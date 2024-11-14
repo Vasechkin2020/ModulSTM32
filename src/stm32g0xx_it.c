@@ -112,11 +112,24 @@ void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler(void)
   HAL_DMA_IRQHandler(&hdma_i2c1_rx);
 }
 
-/** * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.   */
+/** * @brief This function handles USART1 global interrupt  */
 void USART1_IRQHandler(void)
 {
   HAL_UART_IRQHandler(&huart1);
 }
+
+/**   * @brief This function handles USART2 global interrupt  */
+void USART2_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart2);
+}
+/**   * @brief This function handles USART3 and USART4 interrupts.*/
+void USART3_4_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart3);
+  HAL_UART_IRQHandler(&huart4);
+}
+
 
 /**  * @brief This function handles DMA1 channel 1 interrupt.  */ // Прерывания DMA для приемного 
 void DMA1_Channel1_IRQHandler(void)

@@ -294,6 +294,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart2_rx);
 
+    /* USART2 interrupt Init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
   /* USER CODE END USART2_MspInit 1 */
@@ -345,6 +348,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart3_rx);
 
+    /* USART3 interrupt Init */
+    HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_4_IRQn);
   /* USER CODE BEGIN USART3_MspInit 1 */
 
   /* USER CODE END USART3_MspInit 1 */
@@ -388,6 +394,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart4_rx);
 
+    /* USART4 interrupt Init */
+    HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_4_IRQn);
   /* USER CODE BEGIN USART4_MspInit 1 */
 
   /* USER CODE END USART4_MspInit 1 */
@@ -436,6 +445,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     /* USART2 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmarx);
+
+    /* USART2 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspDeInit 1 */
 
   /* USER CODE END USART2_MspDeInit 1 */
@@ -458,6 +470,16 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     /* USART3 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmarx);
+
+    /* USART3 interrupt Deinit */
+  /* USER CODE BEGIN USART3:USART3_4_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "USART3_4_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(USART3_4_IRQn); */
+  /* USER CODE END USART3:USART3_4_IRQn disable */
+
   /* USER CODE BEGIN USART3_MspDeInit 1 */
 
   /* USER CODE END USART3_MspDeInit 1 */
@@ -478,6 +500,16 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     /* USART4 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmarx);
+
+    /* USART4 interrupt Deinit */
+  /* USER CODE BEGIN USART4:USART3_4_IRQn disable */
+    /**
+    * Uncomment the line below to disable the "USART3_4_IRQn" interrupt
+    * Be aware, disabling shared interrupt may affect other IPs
+    */
+    /* HAL_NVIC_DisableIRQ(USART3_4_IRQn); */
+  /* USER CODE END USART4:USART3_4_IRQn disable */
+
   /* USER CODE BEGIN USART4_MspDeInit 1 */
 
   /* USER CODE END USART4_MspDeInit 1 */
