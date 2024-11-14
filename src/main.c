@@ -1,8 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 // ver 1.1
-//  ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>

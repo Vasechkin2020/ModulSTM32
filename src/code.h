@@ -321,25 +321,25 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         if (huart->Instance == USART1)
         {
             dataUART[0].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_IT(&huart1, rx_bufferUART1, sizeof(rx_bufferUART1)); // После обработки вновь запустить прием
+            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, sizeof(rx_bufferUART1)); // После обработки вновь запустить прием
             dataUART[0].statusDMA = status;
         }
         else if (huart->Instance == USART2)
         {
             dataUART[1].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_IT(&huart2, rx_bufferUART2, sizeof(rx_bufferUART2)); // После обработки вновь запустить прием
+            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, sizeof(rx_bufferUART2)); // После обработки вновь запустить прием
             dataUART[1].statusDMA = status;
         }
         else if (huart->Instance == USART3)
         {
             dataUART[2].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_IT(&huart3, rx_bufferUART3, sizeof(rx_bufferUART3)); // После обработки вновь запустить прием
+            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, sizeof(rx_bufferUART3)); // После обработки вновь запустить прием
             dataUART[2].statusDMA = status;
         }
         else if (huart->Instance == USART4)
         {
             dataUART[3].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_IT(&huart4, rx_bufferUART4, sizeof(rx_bufferUART4)); // После обработки вновь запустить прием
+            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, sizeof(rx_bufferUART4)); // После обработки вновь запустить прием
             dataUART[3].statusDMA = status;
         }
     }
@@ -490,16 +490,8 @@ void laserInit() // Инициализация лазеров в зависим�
     lenDataLaser = 11;
 
     HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-    HAL_Delay(999);
-    HAL_UART_DMAStop(&huart1); // Остановка DMA
-    HAL_UART_DMAStop(&huart2); // Остановка DMA
-    HAL_UART_DMAStop(&huart3); // Остановка DMA
-    HAL_UART_DMAStop(&huart4); // Остановка DMA
-
-    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11); // Двнные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11); // Двнные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // Двнные оказываются в буфере rx_bufferUART1
-    HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
 
     laser80_Init(); // Инициализация лазеров
 

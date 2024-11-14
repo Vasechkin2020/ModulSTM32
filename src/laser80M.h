@@ -129,7 +129,7 @@ void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t addr_, uint8_t *
     status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
     printf("statusStopMeasurement= %i ", status);
 
-    static uint8_t buf[4] = {0x00, 0x04, 0x02, 0x7A};
+    static uint8_t buf[4] = {0x80, 0x04, 0x02, 0x7A};
     buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
     HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
