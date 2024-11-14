@@ -143,7 +143,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     /* USART1 DMA Init */    /* USART1_RX Init */
-    hdma_usart1_rx.Instance = DMA1_Channel2;
+    hdma_usart1_rx.Instance = DMA1_Channel4;
     hdma_usart1_rx.Init.Request = DMA_REQUEST_USART1_RX;
     hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -180,7 +180,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USART2 DMA Init */ /* USART2_RX Init */
-    hdma_usart2_rx.Instance = DMA1_Channel3;
+    hdma_usart2_rx.Instance = DMA1_Channel5;
     hdma_usart2_rx.Init.Request = DMA_REQUEST_USART2_RX;
     hdma_usart2_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_usart2_rx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -218,7 +218,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USART3 DMA Init */ /* USART3_RX Init */
-    hdma_usart3_rx.Instance = DMA1_Channel5;
+    hdma_usart3_rx.Instance = DMA1_Channel6;
     hdma_usart3_rx.Init.Request = DMA_REQUEST_USART3_RX;
     hdma_usart3_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_usart3_rx.Init.PeriphInc = DMA_PINC_DISABLE;
