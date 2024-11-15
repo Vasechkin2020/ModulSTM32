@@ -57,8 +57,8 @@ int main(void)
 
   laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
 
-  initMotor();    // Начальная инициализация и настройка шаговых моторов
-  setZeroMotor(); // Установка в ноль
+  // initMotor();    // Начальная инициализация и настройка шаговых моторов
+  // setZeroMotor(); // Установка в ноль
   //  // Запуск обмена данными по SPI с использованием DMA
   initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
   // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
@@ -76,6 +76,11 @@ int main(void)
   HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
   // printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
+
+    // laser80_continuousMeasurement(0); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(1); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(2); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
 
   while (1)
   {
@@ -141,11 +146,11 @@ void SystemClock_Config(void)
   }
 }
 // Перенаправление вывода команды printf на UART
-int __io_putchar(int ch)
-{
-  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
-  return ch;
-}
+// int __io_putchar(int ch)
+// {
+//   HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+//   return ch;
+// }
 
 // Обработчик ошибок
 void Error_Handler(void)
