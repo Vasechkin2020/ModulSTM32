@@ -47,24 +47,13 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART4_UART_Init();
 
-  printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
-  // HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, 11); // Двнные оказываются в буфере rx_bufferUART1
-  // HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, 11); // Двнные оказываются в буфере rx_bufferUART1
-  // HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, 11); // Двнные оказываются в буфере rx_bufferUART1
-  // HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, 11); // Двнные оказываются в буфере rx_bufferUART1
+  // printf("START \r\n");
   
   MX_SPI1_Init();
-  // MX_I2C1_Init();
-
-  // printf ("dfsdfsd=");
-  // printf ("dfsdfsd= %i \r\n",a);
-  // HAL_Delay(999);
+  MX_I2C1_Init();
 
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
-
-
-  // HAL_Delay(999);
 
   laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
 
@@ -154,7 +143,7 @@ void SystemClock_Config(void)
 // Перенаправление вывода команды printf на UART
 int __io_putchar(int ch)
 {
-  HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
   return ch;
 }
 

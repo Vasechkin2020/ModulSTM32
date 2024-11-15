@@ -2,15 +2,13 @@
 #include "usart.h"
 
 UART_HandleTypeDef huart1;
-DMA_HandleTypeDef hdma_usart1_rx;
-
 UART_HandleTypeDef huart2;
-DMA_HandleTypeDef hdma_usart2_rx;
-
 UART_HandleTypeDef huart3;
-DMA_HandleTypeDef hdma_usart3_rx;
-
 UART_HandleTypeDef huart4;
+
+DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart2_rx;
+DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart4_rx;
 //**********************************************************************************************************************************
 /* USART1 init function */
@@ -21,7 +19,7 @@ void MX_USART1_UART_Init(void)
   huart1.Init.BaudRate = 9600;
 #endif
 #ifdef LASER60
-  huart1.Init.BaudRate = 19200;
+  huart1.Init.BaudRate = 115200;
 #endif
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
@@ -36,7 +34,7 @@ void MX_USART1_UART_Init(void)
   {
     Error_Handler();
   }
-  __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); // Включение прерывания Idle Line
+  // __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 /* USART2 init function */
@@ -62,7 +60,7 @@ void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
-  __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE); // Включение прерывания Idle Line
+  // __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 /* USART3 init function */
@@ -88,7 +86,7 @@ void MX_USART3_UART_Init(void)
   {
     Error_Handler();
   }
-  __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE); // Включение прерывания Idle Line
+  // __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 
 /* USART4 init function */
@@ -96,12 +94,12 @@ void MX_USART4_UART_Init(void)
 {
   huart4.Instance = USART4;
 #ifdef LASER80
-  // huart4.Init.BaudRate = 9600;
-  huart4.Init.BaudRate = 921600;
+  huart4.Init.BaudRate = 9600;
+  // huart4.Init.BaudRate = 921600;
 #endif
 #ifdef LASER60
-  // huart4.Init.BaudRate = 115200;
-  huart4.Init.BaudRate = 921600;
+  huart4.Init.BaudRate = 115200;
+  // huart4.Init.BaudRate = 921600;
 #endif
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
@@ -116,7 +114,7 @@ void MX_USART4_UART_Init(void)
   {
     Error_Handler();
   }
-  __HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE); // Включение прерывания Idle Line
+  // __HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE); // Включение прерывания Idle Line
 }
 //************************************************* Функция взываемая по команде HAL_UART_Init() *********************************************************************************
 void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)

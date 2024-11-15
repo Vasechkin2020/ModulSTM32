@@ -6,7 +6,7 @@ enum codeOperation codeOperationUART2;
 enum codeOperation codeOperationUART3;
 enum codeOperation codeOperationUART4;
 
-#define RX_BUFFER_SIZE 32                     // Размер буфера приема
+#define RX_BUFFER_SIZE 64                     // Размер буфера приема БУФЕР БОЛЬШЕГО РАЗМЕРА ЧТОБЫ НЕ СРАБАТЫВАЛИ ПРЕРЫВАНИЯ НА СЕРЕДИНУ БУФЕРА !!!!!!!!!!!!!!!!!!!!!!!!!!!! МИнимум в 2 раза больше данных иначе обрабатывать середину буфера
 uint8_t rx_bufferUART1[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 uint8_t rx_bufferUART2[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
 uint8_t rx_bufferUART3[RX_BUFFER_SIZE] = {0}; // Буфер для приема данных
@@ -15,99 +15,67 @@ uint8_t rx_bufferUART4[RX_BUFFER_SIZE] = {0}; // Буфер для приема 
 extern bool flagCallBackUart; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
 extern HAL_StatusTypeDef status;
 extern uint8_t lenDataLaser; // Длинна полученных данных в буфере
+extern uint32_t millis();    // Длинна полученных данных в буфере
+extern volatile struct dataUART dataUART[4];
 
 uint8_t bufRead11[11]; // Буфер для чтения // Буфер для приема одиночного сообщения без цикла, а после небольшой задержки
 //     //*********************** ОБЬЯВЛЕНИЕ ФУНКЦИЙ *****************************************
 
 void laser80_Init();
+uint8_t WaitForFlagOrTimeout(uint16_t port_, uint32_t timeout_ms); // Функция задержки до взведения флага или таймаута
 uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_); // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1
 //     // Функции применимык к конкретному датчику, так как задается адрес датчика
 
-uint32_t laser80_calcDistance(uint8_t *rx_bufferUART, u_int8_t len_);                 // Вычисление дистанции по полученному буферу или ошибка
-void laser80_controlLaser(UART_HandleTypeDef *huart, uint8_t status_, uint8_t addr_); // Управление лазером 1- Включен 0-Выключен
+uint32_t laser80_calcDistance(uint8_t *rx_bufferUART, u_int8_t len_); // Вычисление дистанции по полученному буферу или ошибка
+void laser80_controlLaser(uint16_t port_, uint8_t status_);           // Управление лазером 1- Включен 0-Выключен
 
-void laser80_singleMeasurement(UART_HandleTypeDef *huart, uint8_t addr_);                              // Одиночное измерение примерно 800 милисекунд
+// void laser80_singleMeasurement(UART_HandleTypeDef *huart, uint8_t addr_);                              // Одиночное измерение примерно 800 милисекунд
+void laser80_singleMeasurement(uint8_t port_);                                                         // Одиночное измерение примерно 800 милисекунд
 void laser80_continuousMeasurement(UART_HandleTypeDef *huart, uint8_t addr_, uint8_t *rx_bufferUART_); // Непрерывное измерение
-void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t addr_, uint8_t *rx_bufferUART_);                                // Прекратить измерение
+void laser80_stopMeasurement(uint8_t port_);                                                           // Прекратить измерение
+// void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t *rx_bufferUART_);       // Прекратить измерение
 
-void laser80_setAddress(UART_HandleTypeDef *huart, uint8_t addr_);       // Установка нового адрес на датчике
-void laser80_broadcastMeasurement(UART_HandleTypeDef *huart);            // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
-bool laser80_getCache(UART_HandleTypeDef *huart, uint8_t addr_);         // Считывание данных из буфера датчика результат измерения
-void laser80_setFrequency(UART_HandleTypeDef *huart, uint8_t freq_);     // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
-void laser80_setStartingPoint(UART_HandleTypeDef *huart, uint8_t data_); // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
-void laser80_setTimeInterval(UART_HandleTypeDef *huart, uint8_t data_);  // Установка инрервала вывода значения при настройке. Не понятно что это.
-void laser80_setRange(UART_HandleTypeDef *huart, uint8_t range_);        // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
-void laser80_setResolution(UART_HandleTypeDef *huart, uint8_t reso_);    // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
+void laser80_setAddress(UART_HandleTypeDef *huart, uint8_t addr_); // Установка нового адрес на датчике
+void laser80_broadcastMeasurement(UART_HandleTypeDef *huart);      // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
+bool laser80_getCache(UART_HandleTypeDef *huart, uint8_t addr_);   // Считывание данных из буфера датчика результат измерения
+void laser80_setFrequency(uint16_t port_, uint8_t freq_);          // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
+void laser80_setStartingPoint(uint16_t port_, uint8_t data_);      // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
+void laser80_setTimeInterval(uint16_t port_, uint8_t data_);       // Установка инрервала вывода значения при настройке. Не понятно что это.
+void laser80_setRange(uint16_t port_, uint8_t range_);             // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
+void laser80_setResolution(u_int16_t port_, uint8_t reso_);        // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
 
 //     // Функции применяются ко всем датчикам на линии и поэтому калибровку и прочее делать с одиночным датчиком
 //     bool setDistanceModification(int8_t data_); // Модификация дистанции. Думаю что колибровка измерений. Можно в плюс или в минус
 //     bool setTestPowerOn(uint8_t data_);            // Установка нужно ли проводить тест датчика после включения питания. Значение 0 или 1
-// };
+//
 
 //     //*********************** РЕАЛИЗАЦИЯ ФУНКЦИЙ *****************************************
 
 // Инициализация лазеров
 void laser80_Init()
 {
-
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
-    // HAL_Delay(100);
-
-    // laser80_setAddress(huart1, 0x80);
-    // laser80_setAddress(huart2, 0x80);
-    // laser80_setAddress(huart3, 0x80);
-    // laser80_setAddress(huart4, 0x80);
-    // HAL_Delay(1000);
-    laser80_stopMeasurement(&huart1, 0x80, rx_bufferUART1);
-    laser80_stopMeasurement(&huart2, 0x80, rx_bufferUART2);
-    laser80_stopMeasurement(&huart3, 0x80, rx_bufferUART3);
-    laser80_stopMeasurement(&huart4, 0x80, rx_bufferUART4);
-    HAL_Delay(2000);
-    printf("\r\n");
-    laser80_controlLaser(&huart1, 1, 0x80);
-    laser80_controlLaser(&huart2, 1, 0x80);
-    laser80_controlLaser(&huart3, 1, 0x80);
-    laser80_controlLaser(&huart4, 1, 0x80);
-    HAL_Delay(1000);
-    printf("\r\n");
-    laser80_setTimeInterval(&huart1, 0);
-    laser80_setTimeInterval(&huart2, 0);
-    laser80_setTimeInterval(&huart3, 0);
-    laser80_setTimeInterval(&huart4, 0);
-    HAL_Delay(1000);
-    printf("\r\n");
-    laser80_setResolution(&huart1, 1);
-    laser80_setResolution(&huart2, 1);
-    laser80_setResolution(&huart3, 1);
-    laser80_setResolution(&huart4, 1);
-    HAL_Delay(1000);
-    printf("\r\n");
-    laser80_setRange(&huart1, 30);
-    laser80_setRange(&huart2, 30);
-    laser80_setRange(&huart3, 30);
-    laser80_setRange(&huart4, 30);
-    HAL_Delay(1000);
-    printf("\r\n");
-    laser80_setStartingPoint(&huart1, 1);
-    laser80_setStartingPoint(&huart2, 1);
-    laser80_setStartingPoint(&huart3, 1);
-    laser80_setStartingPoint(&huart4, 1);
-    HAL_Delay(1000);
-    printf("\r\n");
-    laser80_setFrequency(&huart1, 10);
-    laser80_setFrequency(&huart2, 10);
-    laser80_setFrequency(&huart3, 10);
-    laser80_setFrequency(&huart4, 10);
-    HAL_Delay(1000);
-    printf("\r\n");
-    laser80_controlLaser(&huart1, 0, 0x80);
-    laser80_controlLaser(&huart2, 0, 0x80);
-    laser80_controlLaser(&huart3, 0, 0x80);
-    laser80_controlLaser(&huart4, 0, 0x80);
-    HAL_Delay(1000);
+    for (int i = 0; i < 4; i++)
+    {   
+        printf("\r\n");
+        HAL_Delay(250);
+        laser80_stopMeasurement(i);
+        HAL_Delay(250);
+        laser80_controlLaser(i, 1);
+        HAL_Delay(250);
+        laser80_setTimeInterval(i, 0);
+        HAL_Delay(250);
+        laser80_setResolution(i, 1);
+        HAL_Delay(250);
+        laser80_setRange(i, 30);
+        HAL_Delay(250);
+        laser80_setStartingPoint(i, 1);
+        HAL_Delay(250);
+        laser80_setFrequency(i, 10);
+        HAL_Delay(250);
+        laser80_controlLaser(i, 0);
+        HAL_Delay(250);
+    }
+    HAL_Delay(100000000);
 
     // Непрерывное измерение
     // laser80_continuousMeasurement(huart1, 0x80); // Данные пойдут только через 500 милисекунд
@@ -120,24 +88,17 @@ void laser80_Init()
 }
 
 // Прекратить измерение
-void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t addr_, uint8_t *rx_bufferUART_)
+// void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t *rx_bufferUART_)
+void laser80_stopMeasurement(uint8_t port_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("stopMeasurement ");
-    memset(bufRead11, 0, sizeof(bufRead11));                            // Очистка буфера
-    HAL_UART_DMAStop(huart);                                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("statusStopMeasurement= %i ", status);
-
     static uint8_t buf[4] = {0x80, 0x04, 0x02, 0x7A};
-    buf[0] = addr_;
     buf[3] = lazer80_calcCs(buf, 4);
-    HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
-    codeOperationUART1 = Stop;
-    HAL_Delay(5); // Задержка что точно исполниться и не испортися чем-то другим
+    HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
+    HAL_Delay(10); // Задержка
 
-    printf(" DATA => %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3]);
-    if (bufRead11[0] == addr_ && bufRead11[1] == 0x04 && bufRead11[2] == 0x82 && bufRead11[3] == 0xFA)
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0x80 && dataUART[port_].adr[1] == 0x04 && dataUART[port_].adr[2] == 0x82 && dataUART[port_].adr[3] == 0xFA)
     {
         printf(" ok \r\n");
     }
@@ -145,6 +106,8 @@ void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t addr_, uint8_t *
     {
         printf(" ERROR \r\n");
     }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 
 // Непрерывное измерение
@@ -185,16 +148,30 @@ void laser80_setAddress(UART_HandleTypeDef *huart, uint8_t addr_)
     }
 }
 // Одиночное измерение примерно 800 милисекунд
-void laser80_singleMeasurement(UART_HandleTypeDef *huart, uint8_t addr_)
+// void laser80_singleMeasurement(UART_HandleTypeDef *huart, uint8_t addr_)
+void laser80_singleMeasurement(uint8_t port_)
 {
-    // digitalWrite(PIN_LED, 1);
-    // clearBuf();
-    uint8_t buf[4] = {addr_, 0x06, 0x02, 0x00}; // Команда без последнего байта, там будет контрольная сумма, а пока 0х00
+    printf("singleMeasurement ");
+    static uint8_t buf[4] = {0x80, 0x06, 0x02, 0x78};
     buf[3] = lazer80_calcCs(buf, 4);
-    // Serial2.write(buf, 4);
-    HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
-    HAL_Delay(5); // Задержка что точно исполниться и не испортися чем-то другим
-    codeOperationUART1 = Single;
+    HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
+    HAL_Delay(10); // Задержка
+    // printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    for (int i = 0; i < dataUART[port_].len; i++)
+    {
+        printf("%X-", dataUART[port_].adr[i]);
+    }
+    printf("\r\n");
+    //************************
+    // // digitalWrite(PIN_LED, 1);
+    // // clearBuf();
+    // uint8_t buf[4] = {addr_, 0x06, 0x02, 0x00}; // Команда без последнего байта, там будет контрольная сумма, а пока 0х00
+    // buf[3] = lazer80_calcCs(buf, 4);
+    // // Serial2.write(buf, 4);
+    // HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+    // HAL_Delay(5); // Задержка что точно исполниться и не испортися чем-то другим
+    // codeOperationUART1 = Single;
+    //************************
 
     // HAL_delay(850);
     // uint8_t len = 11;
@@ -286,74 +263,71 @@ bool laser80_getCache(UART_HandleTypeDef *huart, uint8_t addr_)
 
     return true;
 }
+// Функция задержки до взведения флага или таймаута
+uint8_t WaitForFlagOrTimeout(uint16_t port_, uint32_t timeout_ms)
+{
+    uint32_t start_tick = HAL_GetTick(); // Текущее значение системного счетчика
+    while (1)
+    {
+        if (dataUART[port_].flag)
+            return 1; // Флаг взведен, возвращаем успех
+        if ((HAL_GetTick() - start_tick) >= timeout_ms)
+            return 0; // Тайм-аут, возвращаем ошибку
+    }
+}
 
 // Управление лазером 1- Включен 0-Выключен
-void laser80_controlLaser(UART_HandleTypeDef *huart, uint8_t status_, uint8_t addr_)
+void laser80_controlLaser(uint16_t port_, uint8_t status_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("controlLaser -> ");
-    memset(bufRead11, 0, sizeof(bufRead11));            // Очистка буфера
-    HAL_UART_DMAStop(huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 5); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("status= %i ", status);
-
     if (status_ == 0) //  Выключить
     {
-        uint8_t buf[5] = {addr_, 0x06, 0x05, 0x00, 0x00};
+        uint8_t buf[5] = {0x80, 0x06, 0x05, 0x00, 0x00};
         buf[4] = lazer80_calcCs(buf, 5);
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     else //  Включить
     {
-        uint8_t buf[5] = {addr_, 0x06, 0x05, 0x01, 0x00};
+        uint8_t buf[5] = {0x80, 0x06, 0x05, 0x01, 0x00};
         buf[4] = lazer80_calcCs(buf, 5);
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
-    HAL_Delay(50); // Задержка что точно исполниться и не испортися чем-то другим
-    codeOperationUART1 = Status;
+    HAL_Delay(50); // Задержка
+    // WaitForFlagOrTimeout(port_, 200);
+    dataUART[port_].flag = 0; // Убираем флаг
 
-    printf(" DATA => %X %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3], bufRead11[4]);
-    if (bufRead11[0] == addr_ && bufRead11[1] == 0x06 && bufRead11[2] == 0x85 && bufRead11[3] == 0x01)
-    {
-        printf(" %i ok \r\n", status_);
-    }
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0x80 && dataUART[port_].adr[1] == 0x06 && dataUART[port_].adr[2] == 0x85 && dataUART[port_].adr[3] == 0x01)
+        printf(" ok \r\n");
     else
-    {
         printf(" ERROR \r\n");
-    }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 // Установка интервала вывода значения при настройке. Не понятно что это.
-void laser80_setTimeInterval(UART_HandleTypeDef *huart, uint8_t data_)
+void laser80_setTimeInterval(uint16_t port_, uint8_t data_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("setTimeInterval -> ");
-    memset(bufRead11, 0, sizeof(bufRead11));            // Очистка буфера
-    HAL_UART_DMAStop(huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("status= %i ", status);
 
     if (data_ == 0) // через 0 секунду
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x05, 0x00, 0xFD};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (data_ == 1) // через 1 секунду
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x05, 0x01, 0xFC};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(50); // Задержка что точно исполниться и не испортися чем-то другим
-    codeOperationUART1 = TimeInterval;
 
-    printf(" DATA => %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3]);
-    if (bufRead11[0] == 0xFA && bufRead11[1] == 0x04 && bufRead11[2] == 0x85 && bufRead11[3] == 0x7D)
-    {
-        printf(" %i ok \r\n", data_);
-    }
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0xFA && dataUART[port_].adr[1] == 0x04 && dataUART[port_].adr[2] == 0x85 && dataUART[port_].adr[3] == 0x7D)
+        printf(" ok \r\n");
     else
-    {
         printf(" ERROR \r\n");
-    }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 
 // // Модификация дистанции. Думаю что колибровка измерений. Можно в плюс или в минус
@@ -395,37 +369,28 @@ void laser80_setTimeInterval(UART_HandleTypeDef *huart, uint8_t data_)
 // }
 
 // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
-void laser80_setStartingPoint(UART_HandleTypeDef *huart, uint8_t data_)
+void laser80_setStartingPoint(uint16_t port_, uint8_t data_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("setStartingPoint -> ");
-    memset(bufRead11, 0, sizeof(bufRead11));            // Очистка буфера
-    HAL_UART_DMAStop(huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("status= %i ", status);
-
     if (data_ == 0) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x08, 0x00, 0xFA};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (data_ == 1) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x08, 0x01, 0xF9};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(25); // Задержка что точно исполниться и не испортися чем-то другим
-    codeOperationUART1 = StartPoint;
 
-    printf(" DATA => %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3]);
-    if (bufRead11[0] == 0xFA && bufRead11[1] == 0x04 && bufRead11[2] == 0x88 && bufRead11[3] == 0x7A)
-    {
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0xFA && dataUART[port_].adr[1] == 0x04 && dataUART[port_].adr[2] == 0x88 && dataUART[port_].adr[3] == 0x7A)
         printf(" %i ok \r\n", data_);
-    }
     else
-    {
         printf(" ERROR \r\n");
-    }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 
 // // Установка нужно ли проводить тест датчика после включения питания. Значение 0 или 1
@@ -446,130 +411,103 @@ void laser80_setStartingPoint(UART_HandleTypeDef *huart, uint8_t data_)
 // }
 
 // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
-void laser80_setRange(UART_HandleTypeDef *huart, uint8_t range_)
+void laser80_setRange(u_int16_t port_, uint8_t range_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("setRange -> ");
-    memset(bufRead11, 0, sizeof(bufRead11));            // Очистка буфера
-    HAL_UART_DMAStop(huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("status= %i ", status);
-
     if (range_ == 5) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x05, 0xF4};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (range_ == 10) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x0A, 0xEE};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (range_ == 30) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x1E, 0xDB};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (range_ == 50) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x32, 0xC7};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (range_ == 80) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x09, 0x50, 0xA9};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(50); // Задержка что точно исполниться и не испортися чем-то другим
-    codeOperationUART1 = SetRange;
 
-    printf(" DATA => %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3]);
-    if (bufRead11[0] == 0xFA && bufRead11[1] == 0x04 && bufRead11[2] == 0x89 && bufRead11[3] == 0x79)
-    {
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0xFA && dataUART[port_].adr[1] == 0x04 && dataUART[port_].adr[2] == 0x89 && dataUART[port_].adr[3] == 0x79)
         printf(" %i ok \r\n", range_);
-    }
     else
-    {
         printf(" ERROR \r\n");
-    }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 
 // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
-void laser80_setResolution(UART_HandleTypeDef *huart, uint8_t reso_)
+void laser80_setResolution(u_int16_t port_, uint8_t reso_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
     printf("setResolution -> ");
-    memset(bufRead11, 0, sizeof(bufRead11));            // Очистка буфера
-    HAL_UART_DMAStop(huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("status= %i ", status);
-
     if (reso_ == 1) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0C, 0x01, 0xF5};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (reso_ == 2) //
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0C, 0x02, 0xF4};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(50); // Задержка что точно исполниться и не испортися чем-то другим
-    codeOperationUART1 = SetResolution;
 
-    printf(" DATA => %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3]);
-    if (bufRead11[0] == 0xFA && bufRead11[1] == 0x04 && bufRead11[2] == 0x8C && bufRead11[3] == 0x76)
-    {
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0xFA && dataUART[port_].adr[1] == 0x04 && dataUART[port_].adr[2] == 0x8C && dataUART[port_].adr[3] == 0x76)
         printf(" %i ok \r\n", reso_);
-    }
     else
-    {
         printf(" ERROR \r\n");
-    }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 
 // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
-void laser80_setFrequency(UART_HandleTypeDef *huart, uint8_t freq_)
+void laser80_setFrequency(uint16_t port_, uint8_t freq_)
 {
-    flagCallBackUart = false; // Эту функцию Не нужно отрабатывать в колбеке
-    printf("setResolution -> ");
-    memset(bufRead11, 0, sizeof(bufRead11));            // Очистка буфера
-    HAL_UART_DMAStop(huart);                            // Остановка DMA
-    status = HAL_UART_Receive_DMA(huart, bufRead11, 4); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-    printf("status= %i ", status);
-
+    printf("setFrequency -> ");
     if (freq_ == 3) //  примерно 3 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x00, 0xF8};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (freq_ == 5) //  фактически 7 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x05, 0xF3};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (freq_ == 10) //  фактически 8 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x0A, 0xEE};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     if (freq_ == 20) //  фактически 18 Hz
     {
         uint8_t buf[5] = {0xFA, 0x04, 0x0A, 0x14, 0xE4};
-        HAL_UART_Transmit(huart, buf, sizeof(buf), 100);
+        HAL_UART_Transmit(dataUART[port_].huart, buf, sizeof(buf), 100);
     }
     HAL_Delay(50);
-    codeOperationUART1 = SetFrequency;
 
-    printf(" DATA => %X %X %X %X ", bufRead11[0], bufRead11[1], bufRead11[2], bufRead11[3]);
-    if (bufRead11[0] == 0xFA && bufRead11[1] == 0x04 && bufRead11[2] == 0x8A && bufRead11[3] == 0x78)
-    {
+    printf(" DATA => %X %X %X %X ", dataUART[port_].adr[0], dataUART[port_].adr[1], dataUART[port_].adr[2], dataUART[port_].adr[3]);
+    if (dataUART[port_].adr[0] == 0xFA && dataUART[port_].adr[1] == 0x04 && dataUART[port_].adr[2] == 0x8A && dataUART[port_].adr[3] == 0x78)
         printf(" %i ok \r\n", freq_);
-    }
     else
-    {
         printf(" ERROR \r\n");
-    }
+    memset(dataUART[port_].adr, 0, RX_BUFFER_SIZE); // Очистка буфера
+    // printf("\r\n");
 }
 
 uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_) // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1

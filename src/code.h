@@ -31,21 +31,9 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size); // К
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);                   // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
 void laserInit();                                                          // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
 
-struct dataUART
-{
-    uint8_t flag;      // Флаг готовности данных
-    uint8_t num;       // Номер UART
-    uint32_t status;   // Статус данных
-    uint8_t statusDMA; // Статус вызова нового DMA
-    uint32_t distance; // Дистанция по последнему хорошему измерению
-    uint16_t quality;  // Качество сигнала
-    float angle;       // Угол в котором находился мотор в момент когда пришли данные по измерению
-    uint32_t time;     // Время измерения от начала запуска программы
-    uint8_t *adr;      // Адрес буфера
-    UART_HandleTypeDef *huart;
-};
 
-struct dataUART dataUART[4];
+
+volatile struct dataUART dataUART[4];
 uint8_t lenDataLaser; // Длинна полученных данных в буфере
 HAL_StatusTypeDef status;
 
@@ -282,67 +270,79 @@ void workingTimer() // Отработка действий по таймеру �
 // }
 // */
 // Коллбэк, вызываемый при событии UART по окончания приема ОПРЕДЕЛЕННОГО ЗАДАННОГО ЧИСЛА БАЙТ
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (flagCallBackUart) // Флаг указывает нужно ли отрабатывать колбек или мы в самой функции вызова ждем результат и обрабатываем
-    {
-        if (huart->Instance == USART1)
-        {
-            dataUART[0].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[0].statusDMA = status;
-        }
-        else if (huart->Instance == USART2)
-        {
-            dataUART[1].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[1].statusDMA = status;
-        }
-        else if (huart->Instance == USART3)
-        {
-            dataUART[2].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[2].statusDMA = status;
-        }
-        else if (huart->Instance == USART4)
-        {
-            dataUART[3].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser); // После обработки вновь запустить прием
-            dataUART[3].statusDMA = status;
-        }
-    }
-}
+// void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+// {
+//     if (flagCallBackUart) // Флаг указывает нужно ли отрабатывать колбек или мы в самой функции вызова ждем результат и обрабатываем
+//     {
+//         if (huart->Instance == USART1)
+//         {
+//             dataUART[0].flag = 1;                                                 // Обработка полученных данных
+//             status = HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser); // После обработки вновь запустить прием
+//             dataUART[0].statusDMA = status;
+//         }
+//         else if (huart->Instance == USART2)
+//         {
+//             dataUART[1].flag = 1;                                                 // Обработка полученных данных
+//             status = HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser); // После обработки вновь запустить прием
+//             dataUART[1].statusDMA = status;
+//         }
+//         else if (huart->Instance == USART3)
+//         {
+//             dataUART[2].flag = 1;                                                 // Обработка полученных данных
+//             status = HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser); // После обработки вновь запустить прием
+//             dataUART[2].statusDMA = status;
+//         }
+//         else if (huart->Instance == USART4)
+//         {
+//             dataUART[3].flag = 1;                                                 // Обработка полученных данных
+//             status = HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser); // После обработки вновь запустить прием
+//             dataUART[3].statusDMA = status;
+//         }
+//     }
+// }
 
 // Коллбэк, вызываемый при событии UART Idle по окончания приема
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-    if (flagCallBackUart) // Флаг указывает нужно ли отрабатывать колбек или мы в самой функции вызова ждем результат и обрабатываем
+    // if (flagCallBackUart) // Флаг указывает нужно ли отрабатывать колбек или мы в самой функции вызова ждем результат и обрабатываем
+    // {
+    if (huart->Instance == USART1)
     {
-        if (huart->Instance == USART1)
-        {
-            dataUART[0].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, sizeof(rx_bufferUART1)); // После обработки вновь запустить прием
-            dataUART[0].statusDMA = status;
-        }
-        else if (huart->Instance == USART2)
-        {
-            dataUART[1].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, sizeof(rx_bufferUART2)); // После обработки вновь запустить прием
-            dataUART[1].statusDMA = status;
-        }
-        else if (huart->Instance == USART3)
-        {
-            dataUART[2].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, sizeof(rx_bufferUART3)); // После обработки вновь запустить прием
-            dataUART[2].statusDMA = status;
-        }
-        else if (huart->Instance == USART4)
-        {
-            dataUART[3].flag = 1;                                                 // Обработка полученных данных
-            status = HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, sizeof(rx_bufferUART4)); // После обработки вновь запустить прием
-            dataUART[3].statusDMA = status;
-        }
+        HAL_GPIO_WritePin(Step_Motor0_GPIO_Port, Step_Motor0_Pin, GPIO_PIN_SET);
+        dataUART[0].flag = 1;                                                                   // Обработка полученных данных
+        dataUART[0].len = Size;                                                                   // Обработка полученных данных
+        status = HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, sizeof(rx_bufferUART1)); // После обработки вновь запустить прием
+        dataUART[0].statusDMA = status;
+        HAL_GPIO_WritePin(Step_Motor0_GPIO_Port, Step_Motor0_Pin, GPIO_PIN_RESET);
     }
+    else if (huart->Instance == USART2)
+    {
+        HAL_GPIO_WritePin(Step_Motor1_GPIO_Port, Step_Motor1_Pin, GPIO_PIN_SET);
+        dataUART[1].flag = 1;                                                                   // Обработка полученных данных
+        dataUART[1].len = Size;                                                                   // Обработка полученных данных
+        status = HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, sizeof(rx_bufferUART2)); // После обработки вновь запустить прием
+        dataUART[1].statusDMA = status;
+        HAL_GPIO_WritePin(Step_Motor1_GPIO_Port, Step_Motor1_Pin, GPIO_PIN_RESET);
+    }
+    else if (huart->Instance == USART3)
+    {
+        HAL_GPIO_WritePin(Step_Motor2_GPIO_Port, Step_Motor2_Pin, GPIO_PIN_SET);
+        dataUART[2].flag = 1;                                                                   // Обработка полученных данных
+        dataUART[2].len = Size;                                                                   // Обработка полученных данных
+        status = HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, sizeof(rx_bufferUART3)); // После обработки вновь запустить прием
+        dataUART[2].statusDMA = status;
+        HAL_GPIO_WritePin(Step_Motor2_GPIO_Port, Step_Motor2_Pin, GPIO_PIN_RESET);
+    }
+    else if (huart->Instance == USART4)
+    {
+        HAL_GPIO_WritePin(Step_Motor3_GPIO_Port, Step_Motor3_Pin, GPIO_PIN_SET);
+        dataUART[3].flag = 1;                                                                   // Обработка полученных данных
+        dataUART[3].len = Size;                                                                   // Обработка полученных данных
+        status = HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, sizeof(rx_bufferUART4)); // После обработки вновь запустить прием
+        dataUART[3].statusDMA = status;
+        HAL_GPIO_WritePin(Step_Motor3_GPIO_Port, Step_Motor3_Pin, GPIO_PIN_RESET);
+    }
+    // }
 }
 
 // Собираем нужные данные и пишем в структуру на отправку
@@ -449,10 +449,10 @@ void executeDataReceive()
     {
 #ifdef LASER80
         printf("executeDataReceive... \r\n");
-        laser80_stopMeasurement(&huart1, 0x80, rx_bufferUART1);
-        laser80_stopMeasurement(&huart2, 0x80, rx_bufferUART2);
-        laser80_stopMeasurement(&huart3, 0x80, rx_bufferUART3);
-        laser80_stopMeasurement(&huart4, 0x80, rx_bufferUART4);
+        // laser80_stopMeasurement(&huart1, 0x80, rx_bufferUART1);
+        // laser80_stopMeasurement(&huart2, 0x80, rx_bufferUART2);
+        // laser80_stopMeasurement(&huart3, 0x80, rx_bufferUART3);
+        // laser80_stopMeasurement(&huart4, 0x80, rx_bufferUART4);
 #endif
 #ifdef LASER60
         sk60plus_stopContinuous(&huart1);
@@ -487,12 +487,16 @@ void laserInit() // Инициализация лазеров в зависим�
     dataUART[3].huart = &huart4;
 
 #ifdef LASER80
-    lenDataLaser = 11;
-
+    HAL_UART_DMAStop(&huart1);                                             // Остановка DMA
     HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_DMAStop(&huart2);                                             // Остановка DMA
     HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_DMAStop(&huart3);                                             // Остановка DMA
     HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
+    HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, RX_BUFFER_SIZE); // Двнные оказываются в буфере rx_bufferUART1
 
+    lenDataLaser = 11;
     laser80_Init(); // Инициализация лазеров
 
     // Это делаю что-бы нормально работало, а то похоже буфер сбивается и фигня выходит
@@ -695,10 +699,10 @@ void workingStopTimeOut()
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
 #ifdef LASER80
             printf("workingStopTimeOut... \r\n");
-            laser80_stopMeasurement(&huart1, 0x80, rx_bufferUART1);
-            laser80_stopMeasurement(&huart2, 0x80, rx_bufferUART2);
-            laser80_stopMeasurement(&huart3, 0x80, rx_bufferUART3);
-            laser80_stopMeasurement(&huart4, 0x80, rx_bufferUART4);
+            // laser80_stopMeasurement(&huart1, 0x80, rx_bufferUART1);
+            // laser80_stopMeasurement(&huart2, 0x80, rx_bufferUART2);
+            // laser80_stopMeasurement(&huart3, 0x80, rx_bufferUART3);
+            // laser80_stopMeasurement(&huart4, 0x80, rx_bufferUART4);
 #endif
 #ifdef LASER60
             sk60plus_stopContinuous(&huart1);
