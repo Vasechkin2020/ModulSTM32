@@ -10,7 +10,9 @@
 			"main.h": "c",
 			"code.h": "c",
 			"motor.h": "c",
-			"slavespi.h": "c"
+			"slavespi.h": "c",
+			"usart.h": "c",
+			"i2c.h": "c"
 		}
 	}
 }

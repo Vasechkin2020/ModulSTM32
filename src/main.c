@@ -1,11 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
-//ver 1.1
-// ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
-// #define LASER80 yes
-#define LASER60 yes
-// #define LASER50 yes
-
+// ver 1.1
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,17 +27,12 @@ volatile uint32_t millisCounter = 0;
 
 int main(void)
 {
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-
-  /* Configure the system clock */
-  SystemClock_Config();
+  HAL_Init();           /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  SystemClock_Config(); /* Configure the system clock */
 
   // uint32_t timeStart = HAL_GetTick(); // Запоминаем время старта
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+  MX_GPIO_Init(); /* Initialize all configured peripherals */
   MX_TIM6_Init();
   MX_TIM7_Init();
 
@@ -52,7 +42,6 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART4_UART_Init();
-  //printf("START !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
   MX_SPI1_Init();
   MX_I2C1_Init();
@@ -60,52 +49,25 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6); // Таймер для общего цикла
   HAL_TIM_Base_Start_IT(&htim7); // Таймер для моторов шаговых для датчиков
 
-  laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
-  
-  //  // Запуск обмена данными по SPI с использованием DMA
-  initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
-  // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
-  printf("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
+  DEBUG_PRINTF("Это ОТЛАДОЧНЫЙ режим вывода \r\n");
+  initLaser(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
 
   initMotor(); // Начальная инициализация и настройка шаговых моторов
+  // setZeroMotor(); // Установка в ноль
   //  testMotorRun();
-  setZeroMotor(); // Установка в ноль
+  
+  initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA //  // Запуск обмена данными по SPI с использованием DMA
 
-  // int a = 0;
-  // int b = 2;
-  // int c = 0;
-  // float aaa = 3.1415255;
-  // uint8_t MSG[35] = {'\0'};
-  // uint8_t X = 0;
-
-  HAL_Delay(999);
+  // HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
-  printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
+  // DEBUG_PRINTF("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
 
   while (1)
   {
-    loop();
-
-    // a++;
-    // b = a * 2;
-    // c = a + b;
-    // printf("test3 %i %i %i %.2f \n", a, b, c, aaa);
-    // printf("Тест %.4f \n", aaa);
-
-    // float my_float = 1.23456;
-    // char buffer[20];
-    // sprintf(buffer, "%.3f", my_float);
-    // printf("Мой поплавок в виде строки: %s\n", buffer);
-
-    // int i = 132;
-    // printf("Result is: %d.%d \n", i / 10, i % 10);
-
-    // sprintf(MSG, "Hello VASI! Tracing X = %d\r\n", X);
-    // HAL_UART_Transmit(&huart4, MSG, sizeof(MSG), 100);
-    // HAL_Delay(500);
-
-    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
-    // HAL_Delay(500); // Пауза 500 миллисекунд.
+    workingSPI();         // Отработка действий по обмену по шине SPI
+    workingLaser();       // Отработка действий по лазерным датчикам
+    workingTimer();       // Отработка действий по таймеру в 1, 50, 60 милисекунд
+    workingStopTimeOut(); // Остановка драйверов и моторов при обрыве связи
   }
 }
 
@@ -146,11 +108,13 @@ void SystemClock_Config(void)
   }
 }
 // Перенаправление вывода команды printf на UART
+#if DEBUG
 int __io_putchar(int ch)
 {
-  HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
   return ch;
 }
+#endif
 
 // Обработчик ошибок
 void Error_Handler(void)
