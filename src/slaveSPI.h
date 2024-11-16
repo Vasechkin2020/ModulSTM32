@@ -143,12 +143,12 @@ void processingDataReceive()
     else
     {
         Data2Modul_receive = Data2Modul_receive_temp; // Хорошие данные копируем
-        // printf("Data OK. /r/n");
+        // DEBUG_PRINTF("Data OK. /r/n");
     }
-    // printf("b1 = %#X b2 = %#X b3 = %#X b4 = %#X %.4f = ", StructTestPSpi_temp.byte0, StructTestPSpi_temp.byte1, StructTestPSpi_temp.byte2, StructTestPSpi_temp.byte3, StructTestPSpi_temp.fff);
+    // DEBUG_PRINTF("b1 = %#X b2 = %#X b3 = %#X b4 = %#X %.4f = ", StructTestPSpi_temp.byte0, StructTestPSpi_temp.byte1, StructTestPSpi_temp.byte2, StructTestPSpi_temp.byte3, StructTestPSpi_temp.fff);
     //  for (int i = 0; i < sizeof(Data2Modul_receive); i++)
     //  {
-    //      printf("%#X ", adr_structura[i]);
+    //      DEBUG_PRINTF("%#X ", adr_structura[i]);
     //  }
 }
 #endif /* __SPI_H__ */

@@ -114,7 +114,7 @@ void workingTimer() // Отработка действий по таймеру �
     if (flag_timer_1sec) // Вызывается каждую секунду
     {
         HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin); // Инвертирование состояния выхода.
-        printf("%li \r\n", millis());
+        DEBUG_PRINTF("%li \r\n", millis());
         // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
         //  uint8_t UART1_rxBuffer[4] = {0xAA,0xFF,0xAA,0xFF};
         //   uint8_t UART1_rxBuffer[1] = {0x56}; //Запрос версии "V"
@@ -228,9 +228,9 @@ void executeDataReceive()
     {
         for (int i = 0; i < 4; i++)
         {
-            // printf("executeDataReceive = %i status = %i \r\n",Data2Modul_receive.controlMotor.mode,motor[i].status);
+            // DEBUG_PRINTF("executeDataReceive = %i status = %i \r\n",Data2Modul_receive.controlMotor.mode,motor[i].status);
             setMotorAngle(i, Data2Modul_receive.controlMotor.angle[i]);
-            // printf("status = %i \r\n", motor[i].status);
+            // DEBUG_PRINTF("status = %i \r\n", motor[i].status);
         }
     }
     // Команда КОЛИБРОВКИ И УСТАНОВКИ В 0
@@ -268,7 +268,7 @@ void executeDataReceive()
     if (Data2Modul_receive.controlLaser.mode == 0 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
 #ifdef LASER80
-        printf("executeDataReceive... \r\n");
+        DEBUG_PRINTF("executeDataReceive... \r\n");
         laser80_stopMeasurement(0);
         laser80_stopMeasurement(1);
         laser80_stopMeasurement(2);
@@ -284,7 +284,7 @@ void executeDataReceive()
 
     mode_pred = Data2Modul_receive.controlMotor.mode;  // Запоминаяем команду
     laser_pred = Data2Modul_receive.controlLaser.mode; // Запоминаяем команду
-                                                       //     // printf(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
+                                                       // DEBUG_PRINTF(" Data2Modul.radius= %f ", Data2Modul_receive.radius);
 }
 
 void laserInit() // Инициализация лазеров в зависимоти от типа датчика. определяем переменные и буфер приема для каждого UART
@@ -387,11 +387,11 @@ void workingLaser()
             {
                 dataUART[i].status = 0; // Статус все хорошо
                 dataUART[i].distance = laser80_calcDistance(dataUART[i].adr, lenDataLaser);
-                printf("D %i = %lu \n", i, dataUART[i].distance);
+                DEBUG_PRINTF("D %i = %lu \n", i, dataUART[i].distance);
                 dataUART[i].quality = 0;
                 dataUART[i].angle = getAngle(motor[i].position);
                 dataUART[i].time = millisCounter;
-                // printf(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+                // DEBUG_PRINTF(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {
@@ -400,22 +400,22 @@ void workingLaser()
                 dataUART[i].quality = 0;
                 dataUART[i].angle = 0;
                 dataUART[i].time = 0;
-                printf("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
+                DEBUG_PRINTF("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
                 for (int j = 0; j < lenDataLaser; j++)
                 {
-                    printf("%x ", dataUART[i].adr[j]);
+                    DEBUG_PRINTF("%x ", dataUART[i].adr[j]);
                 }
-                printf(" Error dataUART%i. \r\n", dataUART[i].num);
+                DEBUG_PRINTF(" Error dataUART%i. \r\n", dataUART[i].num);
                 do
                 {
                     HAL_UART_DMAStop(dataUART[i].huart);
                     memset(dataUART[i].adr, 0, RX_BUFFER_SIZE);                                      // Очистка буфера
                     status = HAL_UART_Receive_DMA(dataUART[i].huart, dataUART[i].adr, lenDataLaser); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-                    // printf("New status0 = %i ", status);
+                    // DEBUG_PRINTF("New status0 = %i ", status);
                     HAL_Delay(1);
 
                 } while (status != 0);
-                printf("New statusDMA = %i\r\n", status);
+                DEBUG_PRINTF("New statusDMA = %i\r\n", status);
             }
 
 #endif
@@ -428,7 +428,7 @@ void workingLaser()
                 dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
                 dataUART[i].angle = getAngle(motor[i].position);
                 dataUART[i].time = millisCounter;
-                // printf(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+                // DEBUG_PRINTF(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {
@@ -437,22 +437,22 @@ void workingLaser()
                 dataUART[i].quality = 0;
                 dataUART[i].angle = 0;
                 dataUART[i].time = 0;
-                printf("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
+                DEBUG_PRINTF("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
                 for (int j = 0; j < lenDataLaser; j++)
                 {
-                    printf("%x ", dataUART[i].adr[j]);
+                    DEBUG_PRINTF("%x ", dataUART[i].adr[j]);
                 }
-                printf(" Error dataUART%i. \r\n", dataUART[i].num);
+                DEBUG_PRINTF(" Error dataUART%i. \r\n", dataUART[i].num);
                 do
                 {
                     HAL_UART_DMAStop(dataUART[i].huart);
                     memset(dataUART[i].adr, 0, RX_BUFFER_SIZE);                                      // Очистка буфера
                     status = HAL_UART_Receive_DMA(dataUART[i].huart, dataUART[i].adr, lenDataLaser); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-                    // printf("New status0 = %i ", status);
+                    // DEBUG_PRINTF("New status0 = %i ", status);
                     HAL_Delay(1);
 
                 } while (status != 0);
-                printf("New statusDMA = %i\r\n", status);
+                DEBUG_PRINTF("New statusDMA = %i\r\n", status);
             }
 #endif
         }
@@ -499,7 +499,7 @@ void workingStopTimeOut()
             flagTimeOut = false;
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
 #ifdef LASER80
-            printf("workingStopTimeOut... \r\n");
+            DEBUG_PRINTF("workingStopTimeOut... \r\n");
             laser80_stopMeasurement(0);
             laser80_stopMeasurement(1);
             laser80_stopMeasurement(2);

@@ -48,7 +48,7 @@ int main(void)
   MX_USART4_UART_Init();
 
   // printf("START \r\n");
-  
+
   MX_SPI1_Init();
   MX_I2C1_Init();
 
@@ -57,12 +57,15 @@ int main(void)
 
   laserInit(); // Инициализация лазеров зависимоти от типа датчкика. определяем переменные буфер приема для каждого UART
 
+  printf("Это обычный вывод.\n");
+  DEBUG_PRINTF("Это отладочная информация: переменная x = %d\n", 42);
+
   // initMotor();    // Начальная инициализация и настройка шаговых моторов
   // setZeroMotor(); // Установка в ноль
   //  // Запуск обмена данными по SPI с использованием DMA
   initSPI_slave(); // Закладываем начальноы значения и инициализируем буфер DMA
   // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
-  // printf("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
+  // DEBUG_PRINTF("START1 !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n");
 
   //  testMotorRun();
 
@@ -73,14 +76,15 @@ int main(void)
   // uint8_t MSG[35] = {'\0'};
   // uint8_t X = 0;
 
-  HAL_Delay(999);
+  // HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
-  // printf("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
+  // DEBUG_PRINTF("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
+  
 
-    // laser80_continuousMeasurement(0); // Данные пойдут только через 500 милисекунд
-    // laser80_continuousMeasurement(1); // Данные пойдут только через 500 милисекунд
-    // laser80_continuousMeasurement(2); // Данные пойдут только через 500 милисекунд
-    // laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(0); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(1); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(2); // Данные пойдут только через 500 милисекунд
+  // laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
 
   while (1)
   {
@@ -89,18 +93,18 @@ int main(void)
     // a++;
     // b = a * 2;
     // c = a + b;
-    // printf("test3 %i %i %i %.2f \n", a, b, c, aaa);
-    // printf("Тест %.4f \n", aaa);
+    // DEBUG_PRINTF("test3 %i %i %i %.2f \n", a, b, c, aaa);
+    // DEBUG_PRINTF("Тест %.4f \n", aaa);
 
     // float my_float = 1.23456;
     // char buffer[20];
-    // sprintf(buffer, "%.3f", my_float);
-    // printf("Мой поплавок в виде строки: %s\n", buffer);
+    // DEBUG_PRINTF(buffer, "%.3f", my_float);
+    // DEBUG_PRINTF("Мой поплавок в виде строки: %s\n", buffer);
 
     // int i = 132;
-    // printf("Result is: %d.%d \n", i / 10, i % 10);
+    // DEBUG_PRINTF("Result is: %d.%d \n", i / 10, i % 10);
 
-    // sprintf(MSG, "Hello VASI! Tracing X = %d\r\n", X);
+    // DEBUG_PRINTF(MSG, "Hello VASI! Tracing X = %d\r\n", X);
     // HAL_UART_Transmit(&huart4, MSG, sizeof(MSG), 100);
     // HAL_Delay(500);
 
