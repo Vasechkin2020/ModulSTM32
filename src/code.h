@@ -213,11 +213,11 @@ void collect_Data_for_Send()
     {
         cheksum_send += adr_structura[i]; // Побайтно складываем все байты структуры кроме последних 4 в которых переменная в которую запишем результат
     }
-    Modul2Data_send.cheksum = cheksum_send-1;
+    Modul2Data_send.cheksum = cheksum_send-1; // НЕПОНЯТНО ПОЧЕМУ НАДО ОТНИМАТЬ ЕДИНИЦУ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Modul2Data_send.cheksum = 0x0101;
 
-    DEBUG_PRINTF(" id= %0#6lX cheksum_send =  %0#6lX \n", Modul2Data_send.id, Modul2Data_send.cheksum);
-
+    //DEBUG_PRINTF(" id= %0#6lX cheksum_send =  %0#6lX \n", Modul2Data_send.id, Modul2Data_send.cheksum);
+=
     // Modul2Data_send.cheksum = measureCheksum_Modul2Data(Modul2Data_send); // Вычисляем контрольную сумму структуры и пишем ее значение в последний элемент
 
     memset(txBuffer, 0, sizeof(txBuffer));
