@@ -13,7 +13,7 @@ extern "C"
 #if DEBUG
     #define DEBUG_PRINTF(...) printf(__VA_ARGS__)
 #else
-    #define DEBUG_PRINTF(...) (void)0; // Приведение 0 к типу void, ничего не делает
+    #define DEBUG_PRINTF(...) (void)0 // Приведение 0 к типу void, ничего не делает
 #endif
 
 
@@ -64,8 +64,8 @@ extern "C"
 // }
 
 // ВЫБОР С КАКИМИ ДАТЧИКАМИ РАБОТАЕМ. НУЖНО ОСТАВИТЬТОЛЬКО ОДНУ СРОЧКУ, ОСТАЛЬНЫЕ ЗАКОММЕНТИРОВАТЬ
-#define LASER80 yes
-// #define LASER60 yes
+//#define LASER80 yes
+#define LASER60 yes
 // #define LASER50 yes
 
 /* Includes ------------------------------------------------------------------*/

@@ -60,19 +60,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
     {
         HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_SET);   // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);                      // Инвертирование состояния выхода.
-        HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_RESET); // Инвертирование состояния выхода.
 
         //  Обработка полученных данных из rxBuffer
         // transferComplete = 1; // Устанавливаем флаг завершения обмена
         flag_data = true; // Флаг что обменялись данными
         spi.all++;        // Считаем сколько было обменов данными всего
+        HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA
 
-        // // Перезапуск функции для следующего обмена
-        // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Запуск обмена данными по SPI с использованием DMA
-        // if (HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE) != HAL_OK)
-        // {
-        //     Error_Handler(); // Обработка ошибки при повторном запуске
-        // }
+        HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_RESET); // Инвертирование состояния выхода.
     }
 }
 
@@ -81,8 +76,13 @@ extern void collect_Data_for_Send();
 // Начальная инициализция для SPI
 void initSPI_slave()
 {
+
     collect_Data_for_Send(); // Собираем данные для начальной отправки
     spi_slave_queue_Send();  // Начальная закладка данных в буфер
+
+    HAL_SPI_DMAStop(&hspi1);
+    HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE);
+
     // const uint16_t size_structura_receive = sizeof(Data2Modul_receive); // Размер структуры с данными которые получаем
     // const uint16_t size_structura_send = sizeof(Modul2Data_send);       // Размер структуры с данными которые передаем
     // uint16_t max_size_stuct;
@@ -101,7 +101,7 @@ void spi_slave_queue_Send()
     struct Struct_Modul2Data *copy_txBuffer = (struct Struct_Modul2Data *)txBuffer; // Создаем переменную в которую пишем адрес буфера в нужном формате
     *copy_txBuffer = Modul2Data_send;                                               // Копируем из структуры данные в пвмять начиная с адреса в котором начинаяется буфер для передачи
 
-    HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Запуск обмена данными по SPI с использованием DMA //Перезапуск функции для следующего обмена
+    //HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Запуск обмена данными по SPI с использованием DMA //Перезапуск функции для следующего обмена
 }
 
 // Обработка по флагу в main пришедших данных после срабатывания прерывания что обмен состоялся

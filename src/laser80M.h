@@ -23,27 +23,27 @@ uint8_t bufRead11[11]; // Буфер для чтения // Буфер для п
 
 void laser80_Init();
 uint8_t WaitForFlagOrTimeout(uint16_t port_, uint32_t timeout_ms); // Функция задержки до взведения флага или таймаута
-uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_); // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1
+uint8_t lazer80_calcCs(uint8_t *data_, uint8_t len_);              // Расчет контрольной суммы. Берется массив всех оправляемых данных без последнего байта и суммируется побайтно, потом в бинарном виде инвертируются 1 в нолик и нолик в единицу и потом прибавляется 1
 //     // Функции применимык к конкретному датчику, так как задается адрес датчика
 
 uint32_t laser80_calcDistance(uint8_t *rx_bufferUART, u_int8_t len_); // Вычисление дистанции по полученному буферу или ошибка
 void laser80_controlLaser(uint16_t port_, uint8_t status_);           // Управление лазером 1- Включен 0-Выключен
 
 // void laser80_singleMeasurement(UART_HandleTypeDef *huart, uint8_t addr_);                              // Одиночное измерение примерно 800 милисекунд
-void laser80_singleMeasurement(uint8_t port_);                                                         // Одиночное измерение примерно 800 милисекунд
+void laser80_singleMeasurement(uint8_t port_);      // Одиночное измерение примерно 800 милисекунд
 void laser80_continuousMeasurement(uint16_t port_); // Непрерывное измерение
-void laser80_stopMeasurement(uint8_t port_);                                                           // Прекратить измерение
+void laser80_stopMeasurement(uint8_t port_);        // Прекратить измерение
 // void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t *rx_bufferUART_);       // Прекратить измерение
 
 void laser80_setAddress(UART_HandleTypeDef *huart, uint8_t addr_); // Установка нового адрес на датчике
 void laser80_broadcastMeasurement(UART_HandleTypeDef *huart);      // Единое измерние. Команда всем подключенным датчикам произвести измерение.Потом его надо считать с каждого датчика
 bool laser80_getCache(UART_HandleTypeDef *huart, uint8_t addr_);   // Считывание данных из буфера датчика результат измерения
 
-void laser80_setFrequency(uint16_t port_, uint8_t freq_);          // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
-void laser80_setStartingPoint(uint16_t port_, uint8_t data_);      // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
-void laser80_setTimeInterval(uint16_t port_, uint8_t data_);       // Установка инрервала вывода значения при настройке. Не понятно что это.
-void laser80_setRange(uint16_t port_, uint8_t range_);             // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
-void laser80_setResolution(u_int16_t port_, uint8_t reso_);        // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
+void laser80_setFrequency(uint16_t port_, uint8_t freq_);     // Установка частоты измерений, задается в герцах 3,5,10,20 только такие частоты
+void laser80_setStartingPoint(uint16_t port_, uint8_t data_); // Установка точки откоторой считем расстояние. 1- от носа 0 - от зада
+void laser80_setTimeInterval(uint16_t port_, uint8_t data_);  // Установка инрервала вывода значения при настройке. Не понятно что это.
+void laser80_setRange(uint16_t port_, uint8_t range_);        // Установление максимального диапзона измерений. Возможно 5,10,30,50,80 метров
+void laser80_setResolution(u_int16_t port_, uint8_t reso_);   // Установка разрешения измерения есди 1- то 1 мм, если 2 то 0,1 мм. Непонятно работает ли нет фактически и на чем сказывается (время измерения?)
 
 //     // Функции применяются ко всем датчикам на линии и поэтому калибровку и прочее делать с одиночным датчиком
 //     bool setDistanceModification(int8_t data_); // Модификация дистанции. Думаю что колибровка измерений. Можно в плюс или в минус
@@ -55,15 +55,15 @@ void laser80_setResolution(u_int16_t port_, uint8_t reso_);        // Устан
 // Инициализация лазеров
 void laser80_Init()
 {
-        DEBUG_PRINTF("\r\n");
-        HAL_Delay(250);
-        laser80_stopMeasurement(0);
-        laser80_stopMeasurement(1);
-        laser80_stopMeasurement(2);
-        laser80_stopMeasurement(3);
+    DEBUG_PRINTF("\r\n");
+    HAL_Delay(250);
+    laser80_stopMeasurement(0);
+    laser80_stopMeasurement(1);
+    laser80_stopMeasurement(2);
+    laser80_stopMeasurement(3);
 
     for (int i = 0; i < 4; i++)
-    {   
+    {
         DEBUG_PRINTF("\r\n");
         HAL_Delay(250);
         laser80_controlLaser(i, 1);

@@ -43,6 +43,8 @@ extern void setMotorAngle(int num, float _angle);
 extern void setZeroMotor();
 extern volatile uint32_t millisCounter;
 
+int laser_pred = 0; // Переменная для запоминания предыдущей команды
+
 // typedef struct SDataLaser
 // {
 //     uint32_t distance;
@@ -218,7 +220,7 @@ void collect_Data_for_Send()
 void executeDataReceive()
 {
     static int mode_pred = 0;  // Переменная для запоминания предыдущей команды
-    static int laser_pred = 0; // Переменная для запоминания предыдущей команды
+    
     // Команда УПРАВЛЕНИЯ УГЛАМИ
     if (Data2Modul_receive.controlMotor.mode == 0) // Если пришла команда 0 Управления
     {
@@ -481,7 +483,6 @@ void workingSPI()
 
         collect_Data_for_Send(); // Собираем данные в структуре для отправки на момент прихода команлы, но БЕЗ учета команды.До исполнения команды.
         spi_slave_queue_Send();  // Закладываем данные в буфер для передачи(обмена)
-        // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Запуск обмена данными по SPI с использованием DMA
     }
 #endif
 }
@@ -500,6 +501,7 @@ void workingStopTimeOut()
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
 #ifdef LASER80
             DEBUG_PRINTF("workingStopTimeOut... \r\n");
+            laser_pred = 0; //Устанавливаем как будто была команда 0, что бы снова включилось потом при новом обмене
             laser80_stopMeasurement(0);
             laser80_stopMeasurement(1);
             laser80_stopMeasurement(2);
