@@ -52,45 +52,6 @@ void laser80_setResolution(u_int16_t port_, uint8_t reso_);   // Установ�
 
 //     //*********************** РЕАЛИЗАЦИЯ ФУНКЦИЙ *****************************************
 
-// Инициализация лазеров
-void laser80_Init()
-{
-    DEBUG_PRINTF("\r\n");
-    HAL_Delay(250);
-    laser80_stopMeasurement(0);
-    laser80_stopMeasurement(1);
-    laser80_stopMeasurement(2);
-    laser80_stopMeasurement(3);
-
-    for (int i = 0; i < 4; i++)
-    {
-        DEBUG_PRINTF("\r\n");
-        HAL_Delay(250);
-        laser80_controlLaser(i, 1);
-        HAL_Delay(250);
-        laser80_setTimeInterval(i, 0);
-        HAL_Delay(250);
-        laser80_setResolution(i, 1);
-        HAL_Delay(250);
-        laser80_setRange(i, 30);
-        HAL_Delay(250);
-        laser80_setStartingPoint(i, 1);
-        HAL_Delay(250);
-        laser80_setFrequency(i, 10);
-        HAL_Delay(250);
-        laser80_controlLaser(i, 0);
-        HAL_Delay(250);
-    }
-
-    // Непрерывное измерение
-    // laser80_continuousMeasurement(1); // Данные пойдут только через 500 милисекунд
-    // laser80_continuousMeasurement(2); // Данные пойдут только через 500 милисекунд
-    // laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
-
-    // HAL_Delay(5000);
-    // laser80_stopMeasurement(huart1,0x80);
-}
-
 // Прекратить измерение
 // void laser80_stopMeasurement(UART_HandleTypeDef *huart, uint8_t *rx_bufferUART_)
 void laser80_stopMeasurement(uint8_t port_)

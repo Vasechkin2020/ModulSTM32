@@ -21,7 +21,6 @@ bool flag_timer_1sec = false;
 
 GPIO_TypeDef *myPort;
 
-void loop();
 void timer6();                                                             // Обработчик прерывания таймера TIM6	1 раз в 1 милисекунду
 void workingTimer();                                                       // Отработка действий по таймеру в 1, 50, 60 милисекунд
 void workingLaser();                                                       // Отработка действий по лазерным датчикам
@@ -43,7 +42,9 @@ extern void setMotorAngle(int num, float _angle);
 extern void setZeroMotor();
 extern volatile uint32_t millisCounter;
 
-int laser_pred = 0; // Переменная для запоминания предыдущей команды
+int laser_pred = 0;            // Переменная для запоминания предыдущей команды
+u_int8_t modeControlMotor = 0; // Режим в котором находиттся мотор после последней команды управления
+u_int8_t modeControlLaser = 0; // Режим в котором находиттся лазер после последней команды управления
 
 // typedef struct SDataLaser
 // {
@@ -219,8 +220,9 @@ void collect_Data_for_Send()
 // Отработка пришедших команд. Изменение скорости, траектории и прочее
 void executeDataReceive()
 {
-    static int mode_pred = 0;  // Переменная для запоминания предыдущей команды
-    
+    DEBUG_PRINTF("executeDataReceive... \r\n");
+    static int mode_pred = 0; // Переменная для запоминания предыдущей команды
+
     // Команда УПРАВЛЕНИЯ УГЛАМИ
     if (Data2Modul_receive.controlMotor.mode == 0) // Если пришла команда 0 Управления
     {
@@ -251,36 +253,35 @@ void executeDataReceive()
         laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
 #endif
 #ifdef LASER60
-        sk60plus_startContinuousSlow(&huart1, rx_bufferUART1);
-        sk60plus_startContinuousSlow(&huart2, rx_bufferUART2);
-        sk60plus_startContinuousSlow(&huart3, rx_bufferUART3);
-        // sk60plus_startContinuousSlow(&huart4, rx_bufferUART4);
+        sk60plus_startContinuousSlow(0);
+        sk60plus_startContinuousSlow(1);
+        sk60plus_startContinuousSlow(2);
+        sk60plus_startContinuousSlow(3);
 #endif
     }
     if (Data2Modul_receive.controlLaser.mode == 2 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
 #ifdef LASER60
-        sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
-        sk60plus_startContinuousAuto(&huart2, rx_bufferUART2);
-        sk60plus_startContinuousAuto(&huart3, rx_bufferUART3);
-        // sk60plus_startContinuousAuto(&huart4, rx_bufferUART4);
+        sk60plus_startContinuousAuto(0);
+        sk60plus_startContinuousAuto(1);
+        sk60plus_startContinuousAuto(2);
+        sk60plus_startContinuousAuto(3);
 #endif
     }
     // Команда ВЫЛЮЧЕНИЯ ЛАЗЕРНЫХ ДАТЧИКОВ
     if (Data2Modul_receive.controlLaser.mode == 0 && Data2Modul_receive.controlLaser.mode != laser_pred) // Если пришла команда и предыдущая была другая
     {
 #ifdef LASER80
-        DEBUG_PRINTF("executeDataReceive... \r\n");
         laser80_stopMeasurement(0);
         laser80_stopMeasurement(1);
         laser80_stopMeasurement(2);
         laser80_stopMeasurement(3);
 #endif
 #ifdef LASER60
-        sk60plus_stopContinuous(&huart1);
-        sk60plus_stopContinuous(&huart2);
-        sk60plus_stopContinuous(&huart3);
-        // sk60plus_stopContinuous(&huart4);
+        sk60plus_stopContinuous(0);
+        sk60plus_stopContinuous(1);
+        sk60plus_stopContinuous(2);
+        sk60plus_stopContinuous(3);
 #endif
     }
 
@@ -291,6 +292,7 @@ void executeDataReceive()
 
 void laserInit() // Инициализация лазеров в зависимоти от типа датчика. определяем переменные и буфер приема для каждого UART
 {
+    DEBUG_PRINTF("laserInit... \r\n");
     // Это общие данные для любых датчиков
     dataUART[0].num = 0;
     dataUART[0].adr = rx_bufferUART1;
@@ -319,58 +321,88 @@ void laserInit() // Инициализация лазеров в зависим�
 
 #ifdef LASER80
     lenDataLaser = 11;
-    laser80_Init(); // Инициализация лазеров
+
+    DEBUG_PRINTF("\r\n");
+    HAL_Delay(250);
+    laser80_stopMeasurement(0);
+    laser80_stopMeasurement(1);
+    laser80_stopMeasurement(2);
+    laser80_stopMeasurement(3);
+
+    for (int i = 0; i < 4; i++)
+    {
+        DEBUG_PRINTF("\r\n");
+        HAL_Delay(250);
+        laser80_controlLaser(i, 1);
+        HAL_Delay(250);
+        laser80_setTimeInterval(i, 0);
+        HAL_Delay(250);
+        laser80_setResolution(i, 1);
+        HAL_Delay(250);
+        laser80_setRange(i, 30);
+        HAL_Delay(250);
+        laser80_setStartingPoint(i, 1);
+        HAL_Delay(250);
+        laser80_setFrequency(i, 10);
+        HAL_Delay(250);
+        laser80_controlLaser(i, 0);
+    }
+
+    // Непрерывное измерение
+    // HAL_Delay(5000);
+    // laser80_stopMeasurement(huart1,0x80);
+    // laser80_continuousMeasurement(0); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(1); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(2); // Данные пойдут только через 500 милисекунд
+    // laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
 #endif
 
 #ifdef LASER60
 
     lenDataLaser = 13;
-    // HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ
-    HAL_UARTEx_ReceiveToIdle_IT(&huart1, rx_bufferUART1, RX_BUFFER_SIZE); // БЕЗ ЭТОЙ СТРОКИ НЕ РАБОТАЕТ ХРЕН ЗНАЕТ ПОЧЕМУ
 
     sk60plus_autoBaund();
 
-    HAL_UART_DMAStop(&huart1);                                   // Остановка DMA
-    HAL_UART_Receive_DMA(&huart1, rx_bufferUART1, lenDataLaser); // Данные оказываются в буфере rx_bufferUART1
-    sk60plus_setLaser(&huart1, 1);
-    sk60plus_readSerialNumber(&huart1);
-    sk60plus_readSoftwareVersion(&huart1);
-    sk60plus_readHardwareVersion(&huart1);
-    sk60plus_readInputVoltage(&huart1);
-    sk60plus_setLaser(&huart1, 0);
-    sk60plus_startSingleAuto(&huart1);
+    sk60plus_setLaser(0, 1);
+    sk60plus_readSerialNumber(0);
+    sk60plus_readSoftwareVersion(0);
+    sk60plus_readHardwareVersion(0);
+    sk60plus_readInputVoltage(0);
+    sk60plus_setLaser(0, 0);
+    sk60plus_startSingleAuto(0);
+    DEBUG_PRINTF("---\r\n");
 
-    HAL_UART_DMAStop(&huart2);                                   // Остановка DMA
-    HAL_UART_Receive_DMA(&huart2, rx_bufferUART2, lenDataLaser); // Данные оказываются в буфере rx_bufferUART2
-    sk60plus_setLaser(&huart2, 1);
-    sk60plus_readSerialNumber(&huart2);
-    sk60plus_readSoftwareVersion(&huart2);
-    sk60plus_readHardwareVersion(&huart2);
-    sk60plus_readInputVoltage(&huart2);
-    sk60plus_setLaser(&huart2, 0);
-    sk60plus_startSingleAuto(&huart2);
+    sk60plus_setLaser(1, 1);
+    sk60plus_readSerialNumber(1);
+    sk60plus_readSoftwareVersion(1);
+    sk60plus_readHardwareVersion(1);
+    sk60plus_readInputVoltage(1);
+    sk60plus_setLaser(1, 0);
+    sk60plus_startSingleAuto(1);
+    DEBUG_PRINTF("---\r\n");
 
-    HAL_UART_DMAStop(&huart3);                                   // Остановка DMA
-    HAL_UART_Receive_DMA(&huart3, rx_bufferUART3, lenDataLaser); // Данные оказываются в буфере rx_bufferUART3
-    sk60plus_setLaser(&huart3, 1);
-    sk60plus_readSerialNumber(&huart3);
-    sk60plus_readSoftwareVersion(&huart3);
-    sk60plus_readHardwareVersion(&huart3);
-    sk60plus_readInputVoltage(&huart3);
-    sk60plus_setLaser(&huart3, 0);
-    sk60plus_startSingleAuto(&huart3);
+    sk60plus_setLaser(2, 1);
+    sk60plus_readSerialNumber(2);
+    sk60plus_readSoftwareVersion(2);
+    sk60plus_readHardwareVersion(2);
+    sk60plus_readInputVoltage(2);
+    sk60plus_setLaser(2, 0);
+    sk60plus_startSingleAuto(2);
+    DEBUG_PRINTF("---\r\n");
 
-    // HAL_UART_DMAStop(&huart4);                                             // Остановка DMA
-    // HAL_UART_Receive_DMA(&huart4, rx_bufferUART4, lenDataLaser);           // Данные оказываются в буфере rx_bufferUART4
-    // sk60plus_setLaser(&huart4, 1);
-    // sk60plus_readSerialNumber(&huart4);
-    // sk60plus_readSoftwareVersion(&huart4);
-    // sk60plus_readHardwareVersion(&huart4);
-    // sk60plus_readInputVoltage(&huart4);
-    // sk60plus_setLaser(&huart4, 0);
-    // sk60plus_startSingleAuto(&huart4);
+    sk60plus_setLaser(3, 1);
+    sk60plus_readSerialNumber(3);
+    sk60plus_readSoftwareVersion(2);
+    sk60plus_readHardwareVersion(3);
+    sk60plus_readInputVoltage(3);
+    sk60plus_setLaser(3, 0);
+    sk60plus_startSingleAuto(3);
+    DEBUG_PRINTF("---\r\n");
 
-    // sk60plus_startContinuousAuto(&huart1, rx_bufferUART1);
+    sk60plus_startContinuousAuto(0);
+    sk60plus_startContinuousAuto(1);
+    sk60plus_startContinuousAuto(2);
+    sk60plus_startContinuousAuto(3);
 
 #endif
 }
@@ -382,9 +414,7 @@ void workingLaser()
         if (dataUART[i].flag == 1)
         {
             dataUART[i].flag = 0;
-
 #ifdef LASER80
-
             if (dataUART[i].adr[0] == 0x80 && dataUART[i].adr[1] == 0x06) // Если ответ без ошибки то
             {
                 dataUART[i].status = 0; // Статус все хорошо
@@ -430,7 +460,7 @@ void workingLaser()
                 dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
                 dataUART[i].angle = getAngle(motor[i].position);
                 dataUART[i].time = millisCounter;
-                // DEBUG_PRINTF(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+                DEBUG_PRINTF(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {
@@ -445,16 +475,6 @@ void workingLaser()
                     DEBUG_PRINTF("%x ", dataUART[i].adr[j]);
                 }
                 DEBUG_PRINTF(" Error dataUART%i. \r\n", dataUART[i].num);
-                do
-                {
-                    HAL_UART_DMAStop(dataUART[i].huart);
-                    memset(dataUART[i].adr, 0, RX_BUFFER_SIZE);                                      // Очистка буфера
-                    status = HAL_UART_Receive_DMA(dataUART[i].huart, dataUART[i].adr, lenDataLaser); // Запускаем ожидание ответа, указываем куда и сколько байт мы ждем.
-                    // DEBUG_PRINTF("New status0 = %i ", status);
-                    HAL_Delay(1);
-
-                } while (status != 0);
-                DEBUG_PRINTF("New statusDMA = %i\r\n", status);
             }
 #endif
         }
@@ -501,30 +521,22 @@ void workingStopTimeOut()
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
 #ifdef LASER80
             DEBUG_PRINTF("workingStopTimeOut... \r\n");
-            laser_pred = 0; //Устанавливаем как будто была команда 0, что бы снова включилось потом при новом обмене
+            laser_pred = 0; // Устанавливаем как будто была команда 0, что бы снова включилось потом при новом обмене
             laser80_stopMeasurement(0);
             laser80_stopMeasurement(1);
             laser80_stopMeasurement(2);
             laser80_stopMeasurement(3);
 #endif
 #ifdef LASER60
-            sk60plus_stopContinuous(&huart1);
-            sk60plus_stopContinuous(&huart2);
-            sk60plus_stopContinuous(&huart3);
-            sk60plus_stopContinuous(&huart4);
+            sk60plus_stopContinuous(0);
+            sk60plus_stopContinuous(1);
+            sk60plus_stopContinuous(2);
+            sk60plus_stopContinuous(3);
 #endif
             // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
             // HAL_GPIO_WritePin(laserEn_GPIO_Port, laserEn_Pin, GPIO_PIN_SET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
         }
     }
-}
-
-void loop()
-{
-    workingSPI();         // Отработка действий по обмену по шине SPI
-    workingLaser();       // Отработка действий по лазерным датчикам
-    workingTimer();       // Отработка действий по таймеру в 1, 50, 60 милисекунд
-    workingStopTimeOut(); // Остановка драйверов и моторов при обрыве связи
 }
 
 #endif /*CODE_H*/

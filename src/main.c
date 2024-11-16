@@ -27,12 +27,12 @@ volatile uint32_t millisCounter = 0;
 
 int main(void)
 {
-  HAL_Init();/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();           /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   SystemClock_Config(); /* Configure the system clock */
 
   // uint32_t timeStart = HAL_GetTick(); // Запоминаем время старта
 
-  MX_GPIO_Init();  /* Initialize all configured peripherals */
+  MX_GPIO_Init(); /* Initialize all configured peripherals */
   MX_TIM6_Init();
   MX_TIM7_Init();
 
@@ -62,46 +62,15 @@ int main(void)
 
   //  testMotorRun();
 
-  // int a = 0;
-  // int b = 2;
-  // int c = 0;
-  // float aaa = 3.1415255;
-  // uint8_t MSG[35] = {'\0'};
-  // uint8_t X = 0;
-
   // HAL_Delay(999);
   timeSpi = millis(); // Запоминаем время начала цикла
   // DEBUG_PRINTF("%lli LOOP !!!!!!!!!!!!!!!!!!!!!!!!!!! \r\n",timeSpi);
-
-  // laser80_continuousMeasurement(0); // Данные пойдут только через 500 милисекунд
-  // laser80_continuousMeasurement(1); // Данные пойдут только через 500 милисекунд
-  // laser80_continuousMeasurement(2); // Данные пойдут только через 500 милисекунд
-  // laser80_continuousMeasurement(3); // Данные пойдут только через 500 милисекунд
-
   while (1)
   {
-    loop();
-
-    // a++;
-    // b = a * 2;
-    // c = a + b;
-    // DEBUG_PRINTF("test3 %i %i %i %.2f \n", a, b, c, aaa);
-    // DEBUG_PRINTF("Тест %.4f \n", aaa);
-
-    // float my_float = 1.23456;
-    // char buffer[20];
-    // DEBUG_PRINTF(buffer, "%.3f", my_float);
-    // DEBUG_PRINTF("Мой поплавок в виде строки: %s\n", buffer);
-
-    // int i = 132;
-    // DEBUG_PRINTF("Result is: %d.%d \n", i / 10, i % 10);
-
-    // DEBUG_PRINTF(MSG, "Hello VASI! Tracing X = %d\r\n", X);
-    // HAL_UART_Transmit(&huart4, MSG, sizeof(MSG), 100);
-    // HAL_Delay(500);
-
-    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_10); // Инвертирование состояния выхода.
-    // HAL_Delay(500); // Пауза 500 миллисекунд.
+    workingSPI();         // Отработка действий по обмену по шине SPI
+    workingLaser();       // Отработка действий по лазерным датчикам
+    workingTimer();       // Отработка действий по таймеру в 1, 50, 60 милисекунд
+    workingStopTimeOut(); // Остановка драйверов и моторов при обрыве связи
   }
 }
 

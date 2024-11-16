@@ -95,11 +95,9 @@ void MX_USART4_UART_Init(void)
   huart4.Instance = USART4;
 #ifdef LASER80
   huart4.Init.BaudRate = 9600;
-  // huart4.Init.BaudRate = 921600;
 #endif
 #ifdef LASER60
   huart4.Init.BaudRate = 115200;
-  // huart4.Init.BaudRate = 921600;
 #endif
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
