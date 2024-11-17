@@ -61,16 +61,16 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
         flag_data = true;                                                // Флаг что обменялись данными. По этому флагу происходит обработка полученных данных и подготовка данных к следующей передаче
         HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_SET); // Инвертирование состояния выхода.
         HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);                    // Инвертирование состояния выхода.
-
-        //копировнаие данных из моей уже заполненной структуры в буфер для DMA
-        memset(txBuffer, 0, sizeof(txBuffer)); // Очистка буфера
-        struct Struct_Modul2Data *copy_txBuffer = (struct Struct_Modul2Data *)txBuffer; // Создаем переменную в которую пишем адрес буфера в нужном формате
-        *copy_txBuffer = Modul2Data_send; // Копируем данные
-
-        HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA
-
         spi.all++; // Считаем сколько было обменов данными всего
         HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_RESET); // Инвертирование состояния выхода.
+
+        // //копировнаие данных из моей уже заполненной структуры в буфер для DMA
+        // memset(txBuffer, 0, sizeof(txBuffer)); // Очистка буфера
+        // struct Struct_Modul2Data *copy_txBuffer = (struct Struct_Modul2Data *)txBuffer; // Создаем переменную в которую пишем адрес буфера в нужном формате
+        // *copy_txBuffer = Modul2Data_send; // Копируем данные
+
+        // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA
+
     }
 }
 
@@ -81,8 +81,8 @@ void initSPI_slave()
 {
     collect_Data_for_Send(); // Собираем данные для начальной отправки
 
-    HAL_SPI_DMAStop(&hspi1);
-    HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Указываем какие данные отправлять и куда записывать полученные
+    // HAL_SPI_DMAStop(&hspi1);
+    // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Указываем какие данные отправлять и куда записывать полученные
 
 
     // const uint16_t size_structura_receive = sizeof(Data2Modul_receive); // Размер структуры с данными которые получаем
