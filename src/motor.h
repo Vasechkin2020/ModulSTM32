@@ -115,6 +115,8 @@ void initMotor()
     motor[2].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
     motor[3].status = 0; // Флаг ставим что мотор не работает, просто запрещаем делать импульсы
 
+    setSpeedMotor(SPEED); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
+
     // HAL_Delay(100);
 }
 
@@ -171,7 +173,7 @@ void testMotorRun()
     motor[1].status = 1;
     motor[2].status = 1;
     motor[3].status = 1;
-    printf("testMotorRun...\r\n");
+    DEBUG_PRINTF("testMotorRun...\r\n");
     // while (1)
     //     ;
 }
@@ -227,9 +229,9 @@ void setMotorAngle(int num, float _angle)
     // digitalWrite(PIN_Motor_En, 0); // Включаем драйвера
     HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
 
-    printf("set num= %i ", num);
-    printf("pos= %i ", motor[num].position);
-    printf("dest= %i \n", motor[num].destination);
+    DEBUG_PRINTF("set num= %i ", num);
+    DEBUG_PRINTF("pos= %i ", motor[num].position);
+    DEBUG_PRINTF("dest= %i \n", motor[num].destination);
 
     if (motor[num].position < motor[num].destination) // Если цель бпльше то вращение по часовой 1
     {
@@ -275,7 +277,7 @@ void isrMicMotor3()
 void setZeroMotor()
 {
     HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_RESET); // Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-    setSpeedMotor(0.5); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
+    setSpeedMotor(0.2); // Устанавливаем скорость вращения моторов и в дальнейшем только флагами включаем или отключаем вращение
     // Serial.println(String(micros()) + " Start setZeroMotor ...");
     for (int i = 0; i < 4; i++) // Сначала отводим немного на случай если уже в нуле
     {

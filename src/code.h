@@ -33,6 +33,7 @@ void initLaser();                                                          // И
 struct dataUART dataUART[4];
 uint8_t lenDataLaser; // Длинна полученных данных в буфере
 HAL_StatusTypeDef status;
+HAL_SPI_StateTypeDef statusGetState;
 
 bool flagTimeOut = true;       // Флаг таймаута при обрыве связи по SPI
 bool flagCallBackUart = false; // Флаг для указания нужно ли отрабатывать в колбеке  или обраьотка с самой функции
@@ -108,21 +109,32 @@ void workingTimer() // Отработка действий по таймеру �
     if (flag_timer_50millisec)
     {
         flag_timer_50millisec = false;
-        // HAL_GPIO_TogglePin(En_Motor_GPIO_Port, En_Motor_Pin);     // Инвертирование состояния выхода.
-        // HAL_GPIO_TogglePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin); // Инвертирование состояния выхода.
+
         // flag_data = true; // Есть новые данные по шине // РУчной вариант имитации пришедших данных с частотой 20Гц
     }
 
     //----------------------------- 1 секунда --------------------------------------
     if (flag_timer_1sec) // Вызывается каждую секунду
     {
+        // statusGetState = HAL_SPI_GetState(&hspi1);
+        // if (statusGetState == HAL_SPI_STATE_READY)
+        // {
+        //     DEBUG_PRINTF("Timer SPI. ПЕРЕЗАПУСК ПО ТАЙМЕРУ. ЭТО ОШИБКА\n");
+        //     HAL_SPI_Abort(&hspi1);
+        //     HAL_SPI_DMAStop(&hspi1);
+        //     HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA
+        // }
+        // else
+        // {
+        //     // DEBUG_PRINTF("Timer HAL_SPI_STATE_BUSY_TX_RX %u \n", statusGetState);
+        // }
         HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin); // Инвертирование состояния выхода.
         DEBUG_PRINTF("%li \r\n", millis());
-        // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
         //  uint8_t UART1_rxBuffer[4] = {0xAA,0xFF,0xAA,0xFF};
         //   uint8_t UART1_rxBuffer[1] = {0x56}; //Запрос версии "V"
         //   uint8_t UART1_rxBuffer[1] = {0x4F}; // Включить лазер "O"
         //   uint8_t UART1_rxBuffer[1] = {0x43}; // Выключить лазер "C"
+
         flag_timer_1sec = false;
     }
 }
@@ -132,39 +144,39 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     if (huart->Instance == USART1)
     {
-        HAL_GPIO_WritePin(Step_Motor0_GPIO_Port, Step_Motor0_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(Step_Motor0_GPIO_Port, Step_Motor0_Pin, GPIO_PIN_SET);
         dataUART[0].flag = 1;                                                                   // Обработка полученных данных
         dataUART[0].len = Size;                                                                 // Обработка полученных данных
         status = HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_bufferUART1, sizeof(rx_bufferUART1)); // После обработки вновь запустить прием
         dataUART[0].statusDMA = status;
-        HAL_GPIO_WritePin(Step_Motor0_GPIO_Port, Step_Motor0_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(Step_Motor0_GPIO_Port, Step_Motor0_Pin, GPIO_PIN_RESET);
     }
     else if (huart->Instance == USART2)
     {
-        HAL_GPIO_WritePin(Step_Motor1_GPIO_Port, Step_Motor1_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(Step_Motor1_GPIO_Port, Step_Motor1_Pin, GPIO_PIN_SET);
         dataUART[1].flag = 1;                                                                   // Обработка полученных данных
         dataUART[1].len = Size;                                                                 // Обработка полученных данных
         status = HAL_UARTEx_ReceiveToIdle_DMA(&huart2, rx_bufferUART2, sizeof(rx_bufferUART2)); // После обработки вновь запустить прием
         dataUART[1].statusDMA = status;
-        HAL_GPIO_WritePin(Step_Motor1_GPIO_Port, Step_Motor1_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(Step_Motor1_GPIO_Port, Step_Motor1_Pin, GPIO_PIN_RESET);
     }
     else if (huart->Instance == USART3)
     {
-        HAL_GPIO_WritePin(Step_Motor2_GPIO_Port, Step_Motor2_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(Step_Motor2_GPIO_Port, Step_Motor2_Pin, GPIO_PIN_SET);
         dataUART[2].flag = 1;                                                                   // Обработка полученных данных
         dataUART[2].len = Size;                                                                 // Обработка полученных данных
         status = HAL_UARTEx_ReceiveToIdle_DMA(&huart3, rx_bufferUART3, sizeof(rx_bufferUART3)); // После обработки вновь запустить прием
         dataUART[2].statusDMA = status;
-        HAL_GPIO_WritePin(Step_Motor2_GPIO_Port, Step_Motor2_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(Step_Motor2_GPIO_Port, Step_Motor2_Pin, GPIO_PIN_RESET);
     }
     else if (huart->Instance == USART4)
     {
-        HAL_GPIO_WritePin(Step_Motor3_GPIO_Port, Step_Motor3_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(Step_Motor3_GPIO_Port, Step_Motor3_Pin, GPIO_PIN_SET);
         dataUART[3].flag = 1;                                                                   // Обработка полученных данных
         dataUART[3].len = Size;                                                                 // Обработка полученных данных
         status = HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rx_bufferUART4, sizeof(rx_bufferUART4)); // После обработки вновь запустить прием
         dataUART[3].statusDMA = status;
-        HAL_GPIO_WritePin(Step_Motor3_GPIO_Port, Step_Motor3_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(Step_Motor3_GPIO_Port, Step_Motor3_Pin, GPIO_PIN_RESET);
     }
 }
 
@@ -225,13 +237,35 @@ void collect_Data_for_Send()
     struct Struct_Modul2Data *copy_txBuffer = (struct Struct_Modul2Data *)txBuffer; // Создаем переменную в которую пишем адрес буфера в нужном формате
     *copy_txBuffer = Modul2Data_send;                                               // Копируем данные
 
-    HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA                                       // Копируем из структуры данные в пвмять начиная с адреса в котором начинаяется буфер для передачи
+    //*******************************************************
+    statusGetState = HAL_SPI_GetState(&hspi1);
+    if (statusGetState == HAL_SPI_STATE_READY)
+        DEBUG_PRINTF("SPI_GetState ok.");
+    else
+        DEBUG_PRINTF("SPI_GetState ERROR %u ", statusGetState);
+
+    // HAL_SPI_DMAStop(&hspi1);
+    HAL_SPI_Abort(&hspi1);
+    status = HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA                                       // Копируем из структуры данные в пвмять начиная с адреса в котором начинаяется буфер для передачи
+    if (status == HAL_OK)
+        DEBUG_PRINTF("DMA OK \n");
+    else
+    {
+        DEBUG_PRINTF("DMA ERROR \n");
+        statusGetState = HAL_SPI_GetState(&hspi1);
+        if (statusGetState == HAL_SPI_STATE_READY)
+            DEBUG_PRINTF("2SPI готов к передаче данных.\n");
+        else
+            DEBUG_PRINTF("2HAL_SPI_GetState ERROR %u \n", statusGetState);
+    }
+    //*******************************************************
 }
 
 // Отработка пришедших команд. Изменение скорости, траектории и прочее
 void executeDataReceive()
 {
-    DEBUG_PRINTF("executeDataReceive... \r\n");
+    // DEBUG_PRINTF("executeDataReceive... motor= %u laser= %u ", modeControlMotor, modeControlLaser);
+    // DEBUG_PRINTF("in... motor= %lu laser= %lu \r\n", Data2Modul_receive.controlMotor.mode, Data2Modul_receive.controlLaser.mode);
     // Команда УПРАВЛЕНИЯ УГЛАМИ
     if (Data2Modul_receive.controlMotor.mode == 0) // Если пришла команда 0 Управления
     {
@@ -471,7 +505,7 @@ void workingLaser()
                 dataUART[i].quality = laser60_calcSignalQuality(dataUART[i].adr);
                 dataUART[i].angle = getAngle(motor[i].position);
                 dataUART[i].time = millisCounter;
-                DEBUG_PRINTF(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
+                // DEBUG_PRINTF(" UART%i dist = %lu qual = %u \r\n", dataUART[i].num, dataUART[i].distance, dataUART[i].quality);
             }
             else
             {
@@ -480,12 +514,12 @@ void workingLaser()
                 dataUART[i].quality = 0;
                 dataUART[i].angle = 0;
                 dataUART[i].time = 0;
-                DEBUG_PRINTF("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
-                for (int j = 0; j < lenDataLaser; j++)
-                {
-                    DEBUG_PRINTF("%x ", dataUART[i].adr[j]);
-                }
-                DEBUG_PRINTF(" Error dataUART%i. \r\n", dataUART[i].num);
+                // DEBUG_PRINTF("%li UART%i statusDMA= %i   /   ", millis(), dataUART[i].num, dataUART[i].statusDMA);
+                // for (int j = 0; j < lenDataLaser; j++)
+                // {
+                //     DEBUG_PRINTF("%x ", dataUART[i].adr[j]);
+                // }
+                // DEBUG_PRINTF(" Error dataUART%i. \r\n", dataUART[i].num);
             }
 #endif
         }
@@ -498,36 +532,38 @@ void workingSPI()
 #ifdef SPI_protocol
     if (flag_data) // Если обменялись данными
     {
+        HAL_GPIO_WritePin(Analiz2_GPIO_Port, Analiz2_Pin, GPIO_PIN_SET); // Инвертирование состояния выхода.
         flag_data = false;
         flagTimeOut = true; // Флаг для выключения по таймауту
         timeSpi = millis(); // Запоминаем время обмена
-        // printf ("In = %#x %#x %#x %#x \r\n",rxBuffer[0],rxBuffer[1],rxBuffer[2],rxBuffer[3]);
-        // printf ("Out = %#x %#x %#x %#x \r\n",txBuffer[0],txBuffer[1],txBuffer[2],txBuffer[3]);
-        // printf("+\n");
+        // DEBUG_PRINTF ("In = %#x %#x %#x %#x \r\n",rxBuffer[0],rxBuffer[1],rxBuffer[2],rxBuffer[3]);
+        // DEBUG_PRINTF ("Out = %#x %#x %#x %#x \r\n",txBuffer[0],txBuffer[1],txBuffer[2],txBuffer[3]);
+        // DEBUG_PRINTF("+\n");
         processingDataReceive(); // Обработка пришедших данных после состоявшегося обмена  !!! Подумать почему меняю данные даже если они с ошибкой, потом по факту когда будет все работать
-        // printf(" mode= %i \n",Data2Modul_receive.controlMotor.mode);
+        // DEBUG_PRINTF(" mode= %i \n",Data2Modul_receive.controlMotor.mode);
         executeDataReceive(); // Выполнение пришедших команд
 
-        // printf(" Receive id= %i cheksum= %i command= %i ", Data2Modul_receive.id, Data2Modul_receive.cheksum,Data2Modul_receive.command );
-        // printf("start = ");
+        // DEBUG_PRINTF(" Receive id= %i cheksum= %i command= %i ", Data2Modul_receive.id, Data2Modul_receive.cheksum,Data2Modul_receive.command );
+        // DEBUG_PRINTF("start = ");
         // for (int i = 0; i < sizeof(txBuffer); i++)
         // {
-        //     printf(" %x", txBuffer[i]);
+        //     DEBUG_PRINTF(" %x", txBuffer[i]);
         // }
-        // printf("\n");
+        // DEBUG_PRINTF("\n");
 
         collect_Data_for_Send(); // Собираем данные в структуре для отправки на момент прихода команлы, но БЕЗ учета команды.До исполнения команды.
 
-        // printf(" angle0= %.2f angle1= %.2f angle2= %.2f angle3= %.2f", Data2Modul_receive.angle[0], Data2Modul_receive.angle[1], Data2Modul_receive.angle[2], Data2Modul_receive.angle[3] );
+        // DEBUG_PRINTF(" angle0= %.2f angle1= %.2f angle2= %.2f angle3= %.2f", Data2Modul_receive.angle[0], Data2Modul_receive.angle[1], Data2Modul_receive.angle[2], Data2Modul_receive.angle[3] );
 
         // spi_slave_queue_Send();  // Закладываем данные в буфер для передачи(обмена)
 
-        // printf("end   = ");
+        // DEBUG_PRINTF("end   = ");
         // for (int i = 0; i < sizeof(txBuffer); i++)
         // {
-        //     printf(" %x", txBuffer[i]);
+        //     DEBUG_PRINTF(" %x", txBuffer[i]);
         // }
-        // printf("\n");
+        DEBUG_PRINTF("-----\n");
+        HAL_GPIO_WritePin(Analiz2_GPIO_Port, Analiz2_Pin, GPIO_PIN_RESET); // Инвертирование состояния выхода.
     }
 #endif
 }
@@ -536,13 +572,13 @@ void workingStopTimeOut()
 {
     if (flagTimeOut) // Если бы обмен
     {
-        if (millis() - timeSpi > 10000) // Если обмена нет больше 5 секунд то отключаем все
+        if (millis() - timeSpi > 15000) // Если обмена нет больше 5 секунд то отключаем все
         {
             flagTimeOut = false;
             DEBUG_PRINTF("workingStopTimeOut... \r\n");
             HAL_GPIO_WritePin(En_Motor_GPIO_Port, En_Motor_Pin, GPIO_PIN_SET); // Отключаем драйвера моторы// Установить пин HGH GPIO_PIN_SET — установить HIGH,  GPIO_PIN_RESET — установить LOW.
-            modeControlLaser = 0;
             modeControlMotor = 0;
+            modeControlLaser = 0;
 #ifdef LASER80
             laser80_stopMeasurement(0);
             laser80_stopMeasurement(1);
