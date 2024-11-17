@@ -61,12 +61,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM6)
   {
-    // HAL_GPIO_TogglePin(Analiz1_GPIO_Port, Analiz1_Pin); // Инвертирование состояния выхода.
     timer6();
   }
   else if (htim->Instance == TIM7)
   {
-    // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
     timer7();
   }
 }
@@ -80,9 +78,6 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
     if (GPIO_Pin == micMotor0_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
     {
       isrMicMotor0();
-      // HAL_GPIO_TogglePin(Analiz2_GPIO_Port, Analiz2_Pin); // Инвертирование состояния выхода.
-      // HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin); // Инвертирование состояния выхода.
-      // HAL_GPIO_WritePin(Led2_GPIO_Port, Led2_Pin, GPIO_PIN_RESET);
     }
     else if (GPIO_Pin == micMotor1_Pin) // Действия при нажатии кнопки (например, переключение светодиода)
     {

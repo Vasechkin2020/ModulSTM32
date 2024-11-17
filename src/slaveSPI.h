@@ -58,10 +58,11 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if (hspi == &hspi1)
     {
-        flag_data = true;                                                // Флаг что обменялись данными. По этому флагу происходит обработка полученных данных и подготовка данных к следующей передаче
         HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_SET); // Инвертирование состояния выхода.
-        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);                    // Инвертирование состояния выхода.
-        spi.all++; // Считаем сколько было обменов данными всего
+        flag_data = true;                                                // Флаг что обменялись данными. По этому флагу происходит обработка полученных данных и подготовка данных к следующей передаче
+        DEBUG_PRINTF("-up-\n");
+        HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);                      // Инвертирование состояния выхода.
+        spi.all++;                                                         // Считаем сколько было обменов данными всего
         HAL_GPIO_WritePin(Analiz1_GPIO_Port, Analiz1_Pin, GPIO_PIN_RESET); // Инвертирование состояния выхода.
 
         // //копировнаие данных из моей уже заполненной структуры в буфер для DMA
@@ -70,7 +71,61 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
         // *copy_txBuffer = Modul2Data_send; // Копируем данные
 
         // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // // Перезапуск функции для следующего обмена// Запуск обмена данными по SPI с использованием DMA
+    }
+}
 
+// void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) {
+//     if (hspi->ErrorCode & HAL_SPI_ERROR_MODF) {
+//         DEBUG_PRINTF("Ошибка SPI: Mode Fault.\n");
+//     }
+//     if (hspi->ErrorCode & HAL_SPI_ERROR_CRC) {
+//         DEBUG_PRINTF("Ошибка SPI: CRC Error.\n");
+//     }
+//     if (hspi->ErrorCode & HAL_SPI_ERROR_OVR) {
+//         DEBUG_PRINTF("Ошибка SPI: Overrun.\n");
+//     }
+//     if (hspi->ErrorCode & HAL_SPI_ERROR_DMA) {
+//         DEBUG_PRINTF("Ошибка SPI: DMA Error.\n");
+//     }
+//     if (hspi->ErrorCode == HAL_SPI_ERROR_NONE) {
+//         DEBUG_PRINTF("Ошибок SPI нет.\n");
+//     }
+// }
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    DEBUG_PRINTF("Ошибка SPI, код: 0x%08lx\n", hspi->ErrorCode);
+
+    if (hspi->ErrorCode & HAL_SPI_ERROR_MODF)
+    {
+        DEBUG_PRINTF("Ошибка: Mode Fault (MODF).\n");
+    }
+    if (hspi->ErrorCode & HAL_SPI_ERROR_CRC)
+    {
+        DEBUG_PRINTF("Ошибка: CRC Error.\n");
+    }
+    if (hspi->ErrorCode & HAL_SPI_ERROR_OVR)
+    {
+        DEBUG_PRINTF("Ошибка: Overrun.\n");
+        // Сброс OVR: прочитать DR и SR
+        volatile uint32_t temp = hspi->Instance->DR;
+        temp = hspi->Instance->SR;
+        (void)temp;
+    }
+    if (hspi->ErrorCode & HAL_SPI_ERROR_DMA)
+    {
+        DEBUG_PRINTF("Ошибка: DMA Error.\n");
+    }
+    if (hspi->ErrorCode & HAL_SPI_ERROR_FLAG)
+    {
+        DEBUG_PRINTF("Ошибка: Общая ошибка флагов.\n");
+        // Сброс MODF: повторное включение SPI
+        __HAL_SPI_DISABLE(hspi);
+        __HAL_SPI_ENABLE(hspi);
+    }
+    if (hspi->ErrorCode == HAL_SPI_ERROR_NONE)
+    {
+        DEBUG_PRINTF("Ошибок нет.\n");
     }
 }
 
@@ -83,7 +138,6 @@ void initSPI_slave()
 
     // HAL_SPI_DMAStop(&hspi1);
     // HAL_SPI_TransmitReceive_DMA(&hspi1, txBuffer, rxBuffer, BUFFER_SIZE); // Указываем какие данные отправлять и куда записывать полученные
-
 
     // const uint16_t size_structura_receive = sizeof(Data2Modul_receive); // Размер структуры с данными которые получаем
     // const uint16_t size_structura_send = sizeof(Modul2Data_send);       // Размер структуры с данными которые передаем

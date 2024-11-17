@@ -119,37 +119,37 @@ void DMA1_Channel2_3_IRQHandler(void)
 /**   * @brief This function handles DMA1 channel 4, channel 5, channel 6, channel 7 and DMAMUX1 interrupts.  */
 void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler(void)
 {
-  HAL_GPIO_WritePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin, GPIO_PIN_SET);
   HAL_DMA_IRQHandler(&hdma_usart1_rx);
   HAL_DMA_IRQHandler(&hdma_usart2_rx);
   HAL_DMA_IRQHandler(&hdma_usart3_rx);
   HAL_DMA_IRQHandler(&hdma_usart4_rx);
-  HAL_GPIO_WritePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(Dir_Motor0_GPIO_Port, Dir_Motor0_Pin, GPIO_PIN_RESET);
 }
 //************************************************* ПРЕРЫВАНИЯ ПЕРЕФЕРИИ UART ****************************************************************************
 
 /** * @brief This function handles USART1 global interrupt  */
 void USART1_IRQHandler(void)
 {
-  HAL_GPIO_WritePin(Dir_Motor1_GPIO_Port, Dir_Motor1_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(Dir_Motor1_GPIO_Port, Dir_Motor1_Pin, GPIO_PIN_SET);
   HAL_UART_IRQHandler(&huart1);
-  HAL_GPIO_WritePin(Dir_Motor1_GPIO_Port, Dir_Motor1_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(Dir_Motor1_GPIO_Port, Dir_Motor1_Pin, GPIO_PIN_RESET);
 }
 
 /**   * @brief This function handles USART2 global interrupt  */
 void USART2_IRQHandler(void)
 {
-  HAL_GPIO_WritePin(Dir_Motor2_GPIO_Port, Dir_Motor2_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(Dir_Motor2_GPIO_Port, Dir_Motor2_Pin, GPIO_PIN_SET);
   HAL_UART_IRQHandler(&huart2);
-  HAL_GPIO_WritePin(Dir_Motor2_GPIO_Port, Dir_Motor2_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(Dir_Motor2_GPIO_Port, Dir_Motor2_Pin, GPIO_PIN_RESET);
 }
 /**   * @brief This function handles USART3 and USART4 interrupts.*/
 void USART3_4_IRQHandler(void)
 {
-  HAL_GPIO_WritePin(Dir_Motor3_GPIO_Port, Dir_Motor3_Pin, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(Dir_Motor3_GPIO_Port, Dir_Motor3_Pin, GPIO_PIN_SET);
   HAL_UART_IRQHandler(&huart3);
   HAL_UART_IRQHandler(&huart4);
-  HAL_GPIO_WritePin(Dir_Motor3_GPIO_Port, Dir_Motor3_Pin, GPIO_PIN_RESET);
+  // HAL_GPIO_WritePin(Dir_Motor3_GPIO_Port, Dir_Motor3_Pin, GPIO_PIN_RESET);
 }
 
 //***************************************************** I2C SPI ************************************************************************
